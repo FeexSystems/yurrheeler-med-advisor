@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { 
   Heart, Brain, Baby, Eye, Bone, 
   Microscope, Pill, Flower, Activity,
-  Stethoscope, Zap, Droplets, Stomach,
-  Shield, Lungs, Users
+  Stethoscope, Zap, Droplets, Circle,
+  Shield, Wind, Users
 } from "lucide-react";
 
 const specialties = [
@@ -18,9 +18,9 @@ const specialties = [
   { name: "Pediatrics", icon: Baby, color: "text-yellow-600" },
   { name: "OB/GYN", icon: Users, color: "text-purple-500" },
   { name: "Urology", icon: Droplets, color: "text-blue-500" },
-  { name: "Pulmonology", icon: Lungs, color: "text-teal-600" },
+  { name: "Pulmonology", icon: Wind, color: "text-teal-600" },
   { name: "Orthopedics", icon: Bone, color: "text-gray-600" },
-  { name: "Gastroenterology", icon: Stomach, color: "text-amber-600" },
+  { name: "Gastroenterology", icon: Circle, color: "text-amber-600" },
   { name: "Nephrology", icon: Droplets, color: "text-cyan-600" },
   { name: "Ophthalmology", icon: Eye, color: "text-emerald-600" },
   { name: "Infectious Disease", icon: Microscope, color: "text-red-600" }
