@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Heart, Brain, Wind, Activity, Layers, 
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Agent, getAgentById, agents } from "@/lib/agents";
+import { useClinicalStore } from "@/clinical/store";
 
 interface BodyRegion {
   id: string;
@@ -62,7 +63,7 @@ const BODY_REGIONS: BodyRegion[] = [
   {
     id: "respiratory",
     name: "Lungs & Respiratory Tract",
-    agentId: "pulmo",
+    agentId: "pulmono",
     icon: Wind,
     color: "from-sky-500 to-blue-600",
     commonSymptoms: [
@@ -100,7 +101,7 @@ const BODY_REGIONS: BodyRegion[] = [
   {
     id: "joints",
     name: "Musculoskeletal & Joints",
-    agentId: "ortho",
+    agentId: "orthop",
     icon: Layers,
     color: "from-emerald-500 to-teal-600",
     commonSymptoms: [
@@ -142,7 +143,8 @@ interface AnatomyMapperProps {
 }
 
 export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) => {
-  const [selectedRegionId, setSelectedRegionId] = useState<string>("chest");
+  const selectedRegionId = useClinicalStore(state => state.selectedRegion) || "chest";
+  const setSelectedRegionId = useClinicalStore(state => state.setSelectedRegion);
 
   const currentRegion =
     BODY_REGIONS.find((r) => r.id === selectedRegionId) || BODY_REGIONS[0];

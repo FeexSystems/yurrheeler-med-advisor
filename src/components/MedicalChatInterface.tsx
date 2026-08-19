@@ -6,7 +6,7 @@ import {
   Clock, Activity, Sparkles, Copy, Check, Heart, Thermometer,
   FileText, Trash2, User, Bot, AlertCircle, Info, Download,
   Mic, MicOff, ChevronDown, CheckCircle2, UserCheck, Stethoscope,
-  BookOpen
+  BookOpen, FileCheck2, Printer
 } from "lucide-react";
 
 import { useMedicalConsultation } from "@/hooks/useMedicalConsultation";
@@ -26,6 +26,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Agent, agents } from "@/lib/agents";
+import { useAuth } from "@/contexts/AuthContext";
+import { requestSessionSummary, saveTriageSession, StoredTriageSession } from "@/lib/triageService";
+import { SessionSummaryModal } from "@/components/SessionSummaryModal";
+import { toast } from "sonner";
+import { useClinicalStore } from "@/clinical/store";
+import { SessionTrendsChart } from "@/components/clinical/SessionTrendsChart";
+import { ThresholdConfiguration } from "@/components/clinical/ThresholdConfiguration";
 
 const QUICK_SYMPTOMS = [
   "Chest tightness with shortness of breath and diaphoresis",
@@ -133,6 +140,7 @@ interface MedicalChatInterfaceProps {
 export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
   initialSymptom = "",
 }) => {
+  const { user } = useAuth();
   const {
     agents: allAgents,
     selectedAgent,
@@ -153,6 +161,18 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
   const [isAgentDrawerOpen, setIsAgentDrawerOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [voiceToast, setVoiceToast] = useState<string | null>(null);
+
+  // Session Summary Document State
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [currentSummaryData, setCurrentSummaryData] = useState<{
+    summaryDocument: string;
+    triageLevel: "EMERGENCY" | "URGENT" | "SEMI-URGENT" | "NON-URGENT" | "ROUTINE";
+    agentName: string;
+    agentSpecialty: string;
+    sessionId?: string;
+    createdAt?: string;
+  } | null>(null);
 
   // Vitals form
   const [vitalsForm, setVitalsForm] = useState({
@@ -186,6 +206,23 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
       setTimeout(() => setVoiceToast(null), 4000);
     },
   });
+
+  const setAgentState = useClinicalStore(state => state.setAgentState);
+  const activateAgent = useClinicalStore(state => state.activateAgent);
+  const addEvent = useClinicalStore(state => state.addEvent);
+  const thresholdAlerts = useClinicalStore(state => state.thresholdAlerts);
+
+  useEffect(() => {
+    activateAgent(selectedAgent.id);
+  }, [selectedAgent.id, activateAgent]);
+
+  useEffect(() => {
+    if (isLoading) {
+      setAgentState(selectedAgent.id, "reasoning");
+    } else {
+      setAgentState(selectedAgent.id, "idle");
+    }
+  }, [isLoading, selectedAgent.id, setAgentState]);
 
   // Auto-scroll to newest message
   const scrollToBottom = () => {
@@ -234,24 +271,128 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
 
   const handleSaveVitals = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const temp = vitalsForm.temperature ? parseFloat(vitalsForm.temperature) : undefined;
+    const hr = vitalsForm.heartRate ? parseInt(vitalsForm.heartRate, 10) : undefined;
+    const sys = vitalsForm.systolic ? parseInt(vitalsForm.systolic, 10) : undefined;
+    const dia = vitalsForm.diastolic ? parseInt(vitalsForm.diastolic, 10) : undefined;
+    const spo2 = vitalsForm.oxygenSat ? parseFloat(vitalsForm.oxygenSat) : undefined;
+
     setPatientContext((prev) => ({
       ...prev,
       age: vitalsForm.age ? parseInt(vitalsForm.age, 10) : undefined,
       gender: vitalsForm.gender,
       vitals: {
-        temperature_c: vitalsForm.temperature ? parseFloat(vitalsForm.temperature) : undefined,
-        heart_rate_bpm: vitalsForm.heartRate ? parseInt(vitalsForm.heartRate, 10) : undefined,
-        bp_systolic: vitalsForm.systolic ? parseInt(vitalsForm.systolic, 10) : undefined,
-        bp_diastolic: vitalsForm.diastolic ? parseInt(vitalsForm.diastolic, 10) : undefined,
-        oxygen_saturation: vitalsForm.oxygenSat ? parseFloat(vitalsForm.oxygenSat) : undefined,
+        temperature_c: temp,
+        heart_rate_bpm: hr,
+        bp_systolic: sys,
+        bp_diastolic: dia,
+        oxygen_saturation: spo2,
       },
     }));
     setIsVitalsDialogOpen(false);
+    toast.success("Patient vitals updated");
+
+    // Threshold Alert Validation
+    const warnings: string[] = [];
+    if (hr !== undefined && (hr < thresholdAlerts.heartRate.min || hr > thresholdAlerts.heartRate.max)) {
+      warnings.push(`Heart Rate (${hr} bpm) is outside safe range [${thresholdAlerts.heartRate.min}-${thresholdAlerts.heartRate.max}]`);
+    }
+    if (sys !== undefined && (sys < thresholdAlerts.systolicBP.min || sys > thresholdAlerts.systolicBP.max)) {
+      warnings.push(`Systolic BP (${sys} mmHg) is outside safe range [${thresholdAlerts.systolicBP.min}-${thresholdAlerts.systolicBP.max}]`);
+    }
+    if (dia !== undefined && (dia < thresholdAlerts.diastolicBP.min || dia > thresholdAlerts.diastolicBP.max)) {
+      warnings.push(`Diastolic BP (${dia} mmHg) is outside safe range [${thresholdAlerts.diastolicBP.min}-${thresholdAlerts.diastolicBP.max}]`);
+    }
+    if (spo2 !== undefined && (spo2 < thresholdAlerts.oxygenSaturation.min || spo2 > thresholdAlerts.oxygenSaturation.max)) {
+      warnings.push(`SpO2 (${spo2}%) is outside safe range [${thresholdAlerts.oxygenSaturation.min}-${thresholdAlerts.oxygenSaturation.max}]`);
+    }
+    if (temp !== undefined && (temp < thresholdAlerts.temperature.min || temp > thresholdAlerts.temperature.max)) {
+      warnings.push(`Temperature (${temp}°C) is outside safe range [${thresholdAlerts.temperature.min}-${thresholdAlerts.temperature.max}]`);
+    }
+
+    if (warnings.length > 0) {
+      toast.error(`Critical Thresholds Exceeded: ${warnings.length} alert(s) triggered`, {
+        duration: 8000,
+        icon: <AlertTriangle className="w-5 h-5 text-red-500" />
+      });
+      warnings.forEach((warning, idx) => {
+        setTimeout(() => {
+          addEvent({
+            id: `ev-warn-${Date.now()}-${idx}`,
+            timestamp: new Date().toISOString(),
+            type: "clinical.warning",
+            text: warning,
+            severity: "high",
+          });
+        }, idx * 250);
+      });
+    }
   };
 
   const handleSelectAgentAndClose = (agent: Agent) => {
     selectAgent(agent);
     setIsAgentDrawerOpen(false);
+  };
+
+  // Generate formatted clinical summary document at end of session
+  const handleGenerateSummary = async () => {
+    if (messages.length <= 1) {
+      toast.error("Please submit at least one clinical symptom before generating a summary.");
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    const toastId = toast.loading("Synthesizing clinical encounter record & recommended next steps...");
+
+    try {
+      const summaryResult = await requestSessionSummary({
+        history: messages.map((m) => ({ role: m.role, text: m.text })),
+        patientContext,
+        agentName: selectedAgent.name,
+        agentSpecialty: selectedAgent.specialty,
+      });
+
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const primarySymptom = symptomsHistory[0]?.text || messages.find((m) => m.role === "user")?.text || "General Consultation";
+
+      const sessionRecord: StoredTriageSession = {
+        sessionId: newSessionId,
+        userId: user ? user.uid : "guest",
+        agentId: selectedAgent.id,
+        agentName: selectedAgent.name,
+        agentSpecialty: selectedAgent.specialty,
+        symptoms: primarySymptom,
+        status: "completed",
+        summaryDocument: summaryResult.summaryDocument,
+        triageLevel: summaryResult.triageLevel,
+        messagesCount: messages.length,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await saveTriageSession(sessionRecord);
+
+      setCurrentSummaryData({
+        summaryDocument: summaryResult.summaryDocument,
+        triageLevel: summaryResult.triageLevel,
+        agentName: selectedAgent.name,
+        agentSpecialty: selectedAgent.specialty,
+        sessionId: newSessionId,
+        createdAt: new Date().toISOString(),
+      });
+
+      setSummaryModalOpen(true);
+      toast.dismiss(toastId);
+      toast.success("Clinical summary document generated and saved!");
+    } catch (err: unknown) {
+      console.error("Summary generation failed:", err);
+      toast.dismiss(toastId);
+      const errorMsg = err instanceof Error ? err.message : "Failed to generate session summary.";
+      toast.error(errorMsg);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
   };
 
   const getUrgencyBadge = (urgency?: string) => {
@@ -283,6 +424,8 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
         );
     }
   };
+
+  const userMessagesCount = messages.filter((m) => m.role === "user").length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-7xl mx-auto">
@@ -322,18 +465,42 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                 </div>
               </div>
 
-              {/* Action Toolbar: Switch Specialist, Vitals, Export, Clear Conversation */}
+              {/* Action Toolbar: End & Summary, Switch Specialist, Vitals, Export, Clear Conversation */}
               <div className="flex items-center flex-wrap gap-2">
+                {/* Generate Summary Action Button */}
+                <Button
+                  onClick={handleGenerateSummary}
+                  disabled={isGeneratingSummary || userMessagesCount === 0}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all"
+                  title="Generate formatted summary document with key findings and next steps"
+                >
+                  {isGeneratingSummary ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Synthesizing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileCheck2 className="w-3.5 h-3.5 text-blue-200" />
+                      <span>End & Generate Summary</span>
+                    </>
+                  )}
+                </Button>
+
+                {/* Threshold Configuration */}
+                <ThresholdConfiguration />
+
                 {/* Switch Specialist Dialog */}
                 <Dialog open={isAgentDrawerOpen} onOpenChange={setIsAgentDrawerOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 h-9"
+                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 h-9 rounded-xl"
                     >
                       <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>Switch Specialist ({allAgents.length})</span>
+                      <span className="hidden sm:inline">Switch Doctor ({allAgents.length})</span>
+                      <span className="sm:hidden">Switch</span>
                       <ChevronDown className="w-3 h-3 opacity-60" />
                     </Button>
                   </DialogTrigger>
@@ -398,10 +565,10 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1.5 h-9"
+                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1.5 h-9 rounded-xl"
                     >
                       <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>{patientContext.age ? `Patient (${patientContext.age}y)` : "Vitals"}</span>
+                      <span>{patientContext.age ? `${patientContext.age}y` : "Vitals"}</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
@@ -451,12 +618,9 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <Label htmlFor="patient-temp" className="flex items-center gap-1 text-xs">
-                            <Thermometer className="w-3.5 h-3.5 text-red-500" />
-                            Temperature (°C)
-                          </Label>
+                          <Label htmlFor="vitals-temp">Temp (°C)</Label>
                           <Input
-                            id="patient-temp"
+                            id="vitals-temp"
                             type="number"
                             step="0.1"
                             value={vitalsForm.temperature}
@@ -466,12 +630,9 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="patient-hr" className="flex items-center gap-1 text-xs">
-                            <Heart className="w-3.5 h-3.5 text-red-500" />
-                            Heart Rate (bpm)
-                          </Label>
+                          <Label htmlFor="vitals-hr">Heart Rate (BPM)</Label>
                           <Input
-                            id="patient-hr"
+                            id="vitals-hr"
                             type="number"
                             value={vitalsForm.heartRate}
                             onChange={(e) => setVitalsForm({ ...vitalsForm, heartRate: e.target.value })}
@@ -481,36 +642,34 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-2">
                         <div className="space-y-1.5">
-                          <Label htmlFor="patient-bp-sys" className="text-xs">Blood Pressure (Systolic/Diastolic)</Label>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              id="patient-bp-sys"
-                              type="number"
-                              value={vitalsForm.systolic}
-                              onChange={(e) => setVitalsForm({ ...vitalsForm, systolic: e.target.value })}
-                              placeholder="120"
-                              className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            />
-                            <span>/</span>
-                            <Input
-                              id="patient-bp-dia"
-                              type="number"
-                              value={vitalsForm.diastolic}
-                              onChange={(e) => setVitalsForm({ ...vitalsForm, diastolic: e.target.value })}
-                              placeholder="80"
-                              className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                            />
-                          </div>
+                          <Label htmlFor="vitals-sys">BP Systolic</Label>
+                          <Input
+                            id="vitals-sys"
+                            type="number"
+                            value={vitalsForm.systolic}
+                            onChange={(e) => setVitalsForm({ ...vitalsForm, systolic: e.target.value })}
+                            placeholder="120"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                          />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="patient-spo2" className="text-xs">Oxygen SpO2 (%)</Label>
+                          <Label htmlFor="vitals-dia">BP Diastolic</Label>
                           <Input
-                            id="patient-spo2"
+                            id="vitals-dia"
                             type="number"
-                            min="50"
-                            max="100"
+                            value={vitalsForm.diastolic}
+                            onChange={(e) => setVitalsForm({ ...vitalsForm, diastolic: e.target.value })}
+                            placeholder="80"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="vitals-spo2">SpO2 (%)</Label>
+                          <Input
+                            id="vitals-spo2"
+                            type="number"
                             value={vitalsForm.oxygenSat}
                             onChange={(e) => setVitalsForm({ ...vitalsForm, oxygenSat: e.target.value })}
                             placeholder="98"
@@ -519,347 +678,336 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-2">
-                        <Button type="button" variant="outline" onClick={() => setIsVitalsDialogOpen(false)}>
+                      <div className="pt-2 flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setIsVitalsDialogOpen(false)}
+                          className="h-9 text-xs"
+                        >
                           Cancel
                         </Button>
-                        <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                          Save Vitals
+                        <Button
+                          type="submit"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9"
+                        >
+                          Save Baseline
                         </Button>
                       </div>
                     </form>
                   </DialogContent>
                 </Dialog>
 
-                {/* Export Consultation Dropdown */}
+                {/* More options menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 h-9 px-2.5"
-                      aria-label="Export consultation transcript"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-xl border border-slate-200 dark:border-slate-700"
                     >
-                      <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-                      <span className="hidden sm:inline">Export</span>
+                      <Download className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                    <DropdownMenuLabel className="text-xs text-slate-500 dark:text-slate-400 font-normal">
-                      Export Consultation
-                    </DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-xs font-bold">Export Transcript</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => exportConsultation("txt")} className="text-xs cursor-pointer">
-                      <FileText className="w-3.5 h-3.5 mr-2 text-blue-600 dark:text-blue-400" />
-                      Download Clinical Summary (.txt)
+                      <FileText className="w-3.5 h-3.5 mr-2" /> Text Document (.txt)
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => exportConsultation("json")} className="text-xs cursor-pointer">
-                      <Download className="w-3.5 h-3.5 mr-2 text-emerald-600 dark:text-emerald-400" />
-                      Download Raw Data (.json)
+                      <Download className="w-3.5 h-3.5 mr-2" /> Medical JSON (.json)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => setIsClearConfirmOpen(true)}
+                      className="text-xs text-red-600 dark:text-red-400 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Reset Consultation
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-
-                {/* Clear Conversation Button (Header) */}
-                <Dialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-1 h-9 px-2.5"
-                      aria-label="Clear conversation history and start fresh consultation"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Clear</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                    <DialogHeader>
-                      <DialogTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-                        <Trash2 className="w-5 h-5 text-red-500" />
-                        Clear Conversation History?
-                      </DialogTitle>
-                      <DialogDescription className="text-slate-500 dark:text-slate-400">
-                        This will reset the active chat transcript, recorded symptoms, and start a fresh clinical consultation with {selectedAgent.name}.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button variant="outline" onClick={() => setIsClearConfirmOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => {
-                          resetConsultation();
-                          setIsClearConfirmOpen(false);
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        Yes, Clear Conversation
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </div>
             </div>
           </CardHeader>
-        </Card>
 
-        {/* Message Thread Scroll Area */}
-        <Card className="flex-1 border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col min-h-[520px] max-h-[640px] bg-slate-50/50 dark:bg-slate-950/40">
-          <ScrollArea className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            <div className="space-y-6">
-              {messages.map((msg) => {
-                const isUser = msg.role === "user";
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
-                  >
+          {/* Prompt Banner if user has ongoing conversation */}
+          {userMessagesCount >= 1 && (
+            <div className="px-4 py-2 bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 dark:from-slate-800/80 dark:via-blue-950/40 dark:to-slate-800/80 border-t border-b border-blue-100 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <span>
+                  Consultation in progress with <strong>{selectedAgent.name}</strong>. Ready to summarize findings?
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGenerateSummary}
+                disabled={isGeneratingSummary}
+                className="h-7 text-[11px] font-bold border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-slate-700 rounded-lg whitespace-nowrap"
+              >
+                <FileCheck2 className="w-3 h-3 mr-1" />
+                Generate Summary Document
+              </Button>
+            </div>
+          )}
+
+          {/* Chat Messages Stream */}
+          <CardContent className="p-4 sm:p-6 space-y-4 max-h-[580px] min-h-[420px] overflow-y-auto bg-slate-50/50 dark:bg-slate-950/40">
+            {messages.map((msg, index) => {
+              const isUser = msg.role === "user";
+              const isCopied = copiedId === msg.id;
+
+              return (
+                <motion.div
+                  key={msg.id || index}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
+                >
+                  <div className={`flex items-start gap-2.5 max-w-[90%] sm:max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
                     {/* Avatar */}
-                    {isUser ? (
-                      <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-sm">
-                        <User className="w-4 h-4" />
-                      </div>
-                    ) : (
-                      <img
-                        src={selectedAgent.avatar_url}
-                        alt={selectedAgent.name}
-                        className="flex-shrink-0 w-9 h-9 rounded-xl object-cover border border-blue-300 dark:border-blue-600 shadow-sm"
-                        referrerPolicy="no-referrer"
-                      />
-                    )}
+                    <div className="flex-shrink-0 mt-1">
+                      {isUser ? (
+                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                          <User className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <img
+                          src={selectedAgent.avatar_url}
+                          alt={selectedAgent.name}
+                          className="w-8 h-8 rounded-full object-cover border border-blue-400 shadow-xs"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                    </div>
 
-                    {/* Message Bubble */}
+                    {/* Message Bubble Card */}
                     <div
-                      className={`flex flex-col max-w-[90%] sm:max-w-[84%] ${
-                        isUser ? "items-end" : "items-start"
+                      className={`p-4 rounded-2xl shadow-xs transition-colors ${
+                        isUser
+                          ? "bg-blue-600 text-white rounded-tr-xs"
+                          : "bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-xs"
                       }`}
                     >
-                      {/* Sender label, urgency badge, and SUBTLE LOCALIZED TIMESTAMP */}
-                      <div className="flex items-center gap-2 mb-1 px-1">
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          {isUser ? "Patient" : selectedAgent.name}
+                      {/* Sender Meta */}
+                      <div className="flex items-center justify-between gap-3 mb-1.5">
+                        <span className={`text-[11px] font-bold ${isUser ? "text-blue-100" : "text-blue-600 dark:text-blue-400"}`}>
+                          {isUser ? "You (Patient)" : selectedAgent.name}
                         </span>
-                        {!isUser && getUrgencyBadge(msg.urgency)}
-                        {/* Subtle localized timestamp */}
-                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono tracking-tight">
-                          {msg.timestamp}
-                        </span>
-                      </div>
-
-                      {/* Content Card with Reading Progress for AI Reports */}
-                      <div
-                        className={`rounded-2xl p-4 sm:p-5 shadow-sm text-sm leading-relaxed ${
-                          isUser
-                            ? "bg-blue-600 text-white rounded-tr-none font-medium"
-                            : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-800 rounded-tl-none"
-                        }`}
-                      >
-                        {isUser ? (
-                          <p className="whitespace-pre-wrap">{msg.text}</p>
-                        ) : (
-                          <AIReportReadingCard
-                            text={msg.text}
-                            msgId={msg.id}
-                            specialty={selectedAgent.specialty}
-                            onCopy={handleCopy}
-                            isCopied={copiedId === msg.id}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* SKELETON FEEDBACK COMPONENT: Displayed while AI agent is processing inquiry */}
-              {isLoading && (
-                <div className="flex items-start gap-3 animate-fade-in" aria-live="polite" aria-busy="true">
-                  <img
-                    src={selectedAgent.avatar_url}
-                    alt={selectedAgent.name}
-                    className="flex-shrink-0 w-9 h-9 rounded-xl object-cover border border-blue-300 dark:border-blue-600 shadow-sm animate-pulse"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="flex flex-col w-full max-w-[88%] sm:max-w-[82%] space-y-2">
-                    <div className="flex items-center gap-2 px-1">
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{selectedAgent.name}</span>
-                      <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 animate-pulse text-[11px] flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 animate-spin text-blue-600 dark:text-blue-400" />
-                        Clinical Triage & Differential Evaluation...
-                      </Badge>
-                    </div>
-
-                    {/* Rich Skeleton Structure */}
-                    <Card className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 shadow-sm space-y-3.5 rounded-tl-none">
-                      <div className="flex items-center space-x-3">
-                        <Skeleton className="h-5 w-40 bg-blue-100/80 dark:bg-blue-900/40" />
-                        <Skeleton className="h-5 w-28 bg-slate-200 dark:bg-slate-800" />
-                      </div>
-
-                      <div className="space-y-2 pt-1">
-                        <Skeleton className="h-4 w-full bg-slate-200 dark:bg-slate-800" />
-                        <Skeleton className="h-4 w-[92%] bg-slate-200 dark:bg-slate-800" />
-                        <Skeleton className="h-4 w-[78%] bg-slate-200 dark:bg-slate-800" />
-                      </div>
-
-                      <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-2 border border-slate-100 dark:border-slate-800">
-                        <Skeleton className="h-4 w-48 bg-slate-300 dark:bg-slate-700" />
-                        <div className="flex gap-2 items-center">
-                          <Skeleton className="h-3.5 w-3.5 rounded-full bg-emerald-200 dark:bg-emerald-800" />
-                          <Skeleton className="h-3.5 w-[85%] bg-slate-200 dark:bg-slate-800" />
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <Skeleton className="h-3.5 w-3.5 rounded-full bg-emerald-200 dark:bg-emerald-800" />
-                          <Skeleton className="h-3.5 w-[70%] bg-slate-200 dark:bg-slate-800" />
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                          <span>{msg.timestamp}</span>
+                          {!isUser && msg.urgency && getUrgencyBadge(msg.urgency)}
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center pt-1">
-                        <Skeleton className="h-3 w-36 bg-slate-200 dark:bg-slate-800" />
-                        <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800" />
-                      </div>
-                    </Card>
+                      {/* Content */}
+                      {isUser ? (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                      ) : (
+                        <AIReportReadingCard
+                          text={msg.text}
+                          msgId={msg.id}
+                          specialty={selectedAgent.specialty}
+                          onCopy={handleCopy}
+                          isCopied={isCopied}
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                </motion.div>
+              );
+            })}
 
-              {/* Auto-scroll anchor */}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-
-          {/* Quick Symptom Chips */}
-          <div className="px-4 py-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-t border-slate-200/80 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap pl-1">
-                Quick Prompts:
-              </span>
-              {QUICK_SYMPTOMS.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setInputVal(chip);
-                    if (textareaRef.current) {
-                      textareaRef.current.focus();
-                    }
-                  }}
-                  className="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 border border-slate-200/90 dark:border-slate-700 rounded-full transition-all whitespace-nowrap text-xs shadow-2xs font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Live Voice Status Pill */}
-          <AnimatePresence>
-            {isListening && (
+            {/* Loading Indicator */}
+            {isLoading && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="bg-red-500/10 dark:bg-red-950/40 border-t border-red-200 dark:border-red-900 px-4 py-2 flex items-center justify-between text-xs text-red-900 dark:text-red-200"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-2.5 max-w-[80%]"
               >
-                <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                  </span>
-                  <span className="font-semibold">Microphone Active: Dictate your symptoms clearly...</span>
+                <img
+                  src={selectedAgent.avatar_url}
+                  alt={selectedAgent.name}
+                  className="w-8 h-8 rounded-full object-cover border border-blue-400"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-xs space-y-2 shadow-xs">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                    <span>{selectedAgent.name} is evaluating clinical differential & triage parameters...</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3.5 w-64 bg-slate-200 dark:bg-slate-800" />
+                    <Skeleton className="h-3.5 w-48 bg-slate-200 dark:bg-slate-800" />
+                  </div>
                 </div>
-                {interimTranscript && (
-                  <span className="italic text-slate-600 dark:text-slate-300 truncate max-w-xs sm:max-w-md">
-                    "{interimTranscript}"
-                  </span>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={stopListening}
-                  className="h-6 text-xs text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950"
-                >
-                  Done
-                </Button>
               </motion.div>
             )}
-          </AnimatePresence>
 
-          {/* Accessible Chat Input Form */}
-          <CardFooter className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-            <form onSubmit={handleSubmit} className="w-full flex flex-col sm:flex-row gap-2.5">
-              <div className="flex-1 relative">
-                <Textarea
-                  ref={textareaRef}
-                  id="symptom-input"
-                  rows={2}
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Describe your symptoms to ${selectedAgent.name} (e.g., onset, pain 1-10, location, vitals)...`}
-                  className="resize-none min-h-[58px] max-h-32 text-sm pr-14 focus-visible:ring-2 focus-visible:ring-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-xl"
-                  aria-label="Describe your symptoms or ask a medical inquiry"
-                  aria-describedby="chat-input-instruction"
-                  disabled={isLoading}
-                />
-                <span id="chat-input-instruction" className="sr-only">
-                  Press Enter to submit symptoms inquiry, or Shift+Enter for a new line. You can also use the microphone button to dictate symptoms.
-                </span>
+            <div ref={messagesEndRef} />
+          </CardContent>
 
-                {/* Voice Dictation Button inside Textarea */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleListening}
-                        className={`absolute right-2.5 top-2.5 h-8 w-8 rounded-lg transition-all ${
-                          isListening
-                            ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                            : "text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700"
-                        }`}
-                        aria-label={isListening ? "Stop voice dictation" : "Dictate symptoms with voice"}
-                      >
-                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{isListening ? "Stop recording voice" : "Dictate symptoms via microphone"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+          {/* Quick Symptoms Prompt Pills */}
+          <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 overflow-x-auto scrollbar-none flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              Quick Inquiries:
+            </span>
+            {QUICK_SYMPTOMS.map((symp, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setInputVal(symp);
+                  if (textareaRef.current) textareaRef.current.focus();
+                }}
+                className="text-[11px] px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-full whitespace-nowrap transition-colors text-slate-700 dark:text-slate-300 font-medium"
+              >
+                {symp}
+              </button>
+            ))}
+          </div>
 
-              <div className="flex sm:flex-col justify-between sm:justify-end gap-2">
-                <Button
-                  type="submit"
-                  disabled={!inputVal.trim() || isLoading}
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 shadow-sm transition-all flex items-center justify-center gap-2 h-12 rounded-xl"
-                  aria-label="Submit symptoms for clinical AI triage"
-                >
-                  {isLoading ? (
-                    <>
-                      <Sparkles className="w-4 h-4 animate-spin" />
-                      <span>Evaluating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      <span>Consult</span>
-                    </>
-                  )}
-                </Button>
-              </div>
+          {/* Input Chat Box & Controls */}
+          <CardFooter className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200/90 dark:border-slate-800 transition-all">
+            <form onSubmit={handleSubmit} className="w-full flex flex-col space-y-2">
+              {/* Voice feedback banner if active */}
+              {isListening ? (
+                <div className="flex flex-col p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl relative overflow-hidden transition-all duration-300">
+                  <div className="absolute inset-0 pointer-events-none opacity-20">
+                    <div className="absolute top-1/2 left-0 w-full h-8 bg-red-400 dark:bg-red-500 rounded-[100%] blur-xl animate-pulse" style={{ transform: 'translateY(-50%)' }}></div>
+                  </div>
+                  <div className="relative z-10 flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                      </span>
+                      <span className="font-bold text-red-700 dark:text-red-300">Recording Patient Note...</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={toggleListening}
+                      className="h-7 text-xs px-3 rounded-full font-bold shadow-sm"
+                    >
+                      <MicOff className="w-3 h-3 mr-1" /> Done
+                    </Button>
+                  </div>
+                  
+                  <div className="relative z-10 min-h-[60px] p-3 bg-white/50 dark:bg-slate-900/50 rounded-lg border border-red-100 dark:border-red-900/40 overflow-y-auto">
+                    <span className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
+                      {inputVal} <span className="opacity-60">{interimTranscript || "Listening..."}</span>
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-end gap-2">
+                  <div className="relative flex-1 group">
+                    <Textarea
+                      ref={textareaRef}
+                      value={inputVal}
+                      onChange={(e) => setInputVal(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={`Describe your symptoms to ${selectedAgent.name} (e.g. onset, severity, location, timeline)...`}
+                      className="min-h-[54px] max-h-32 pr-10 text-xs sm:text-sm resize-none rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-blue-500 transition-colors"
+                      disabled={isLoading}
+                    />
+
+                    {/* Speech Dictation Button */}
+                    {hasSupport && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={toggleListening}
+                              className="absolute right-2 bottom-2 h-7 w-7 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors group-focus-within:opacity-100"
+                              title="Dictate clinical note"
+                            >
+                              <Mic className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-slate-800 text-white text-[10px] font-semibold border-none">
+                            Capture Voice Note
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+
+                  {/* Submit button */}
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !inputVal.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-[54px] px-5 rounded-xl flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
+                  >
+                    {isLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span className="hidden sm:inline">Consult</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </form>
           </CardFooter>
         </Card>
       </div>
 
-      {/* Sidebar: Session Symptom Timeline, Active Specialist Bio, Emergency Check (4 columns) */}
+      {/* Sidebar: Attending Specialist, Symptom Log, Summary Trigger, Red Flag Matrix (4 columns) */}
       <div className="lg:col-span-4 space-y-4">
+        {/* Session Summary Card */}
+        <Card className="border-indigo-100 dark:border-slate-800 shadow-sm bg-gradient-to-br from-indigo-50/60 via-white to-blue-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/30">
+          <CardHeader className="pb-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileCheck2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">
+                  Session Summary Document
+                </CardTitle>
+              </div>
+              <Badge className="bg-indigo-600 text-white text-[10px]">
+                Automated
+              </Badge>
+            </div>
+            <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
+              Compile clinical differential, NEWS2 risk, and recommended action steps.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-0 text-xs text-slate-600 dark:text-slate-300">
+            <p className="leading-relaxed">
+              At the conclusion of your clinical consultation, generate an official, formatted <strong>Triage Summary Record</strong> to share with your personal physician or archive.
+            </p>
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                onClick={handleGenerateSummary}
+                disabled={isGeneratingSummary || userMessagesCount === 0}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
+              >
+                {isGeneratingSummary ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Compiling Summary...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Generate Summary Document</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Attending Specialist Card */}
         <Card className="border-blue-100 dark:border-slate-800 shadow-sm bg-gradient-to-br from-white to-blue-50/40 dark:from-slate-900 dark:to-slate-900/80">
           <CardHeader className="pb-3">
@@ -896,7 +1044,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
               variant="outline"
               size="sm"
               onClick={() => setIsAgentDrawerOpen(true)}
-              className="w-full text-xs font-semibold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-slate-700 hover:bg-blue-100/50 dark:hover:bg-slate-800 h-8"
+              className="w-full text-xs font-semibold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-slate-700 hover:bg-blue-100/50 dark:hover:bg-slate-800 h-8 rounded-xl"
             >
               Change Doctor ({allAgents.length} Available)
             </Button>
@@ -928,7 +1076,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                 No symptoms submitted yet. Dictate or type symptoms to begin tracking.
               </div>
             ) : (
-              <ScrollArea className="h-44 pr-2">
+              <ScrollArea className="h-36 pr-2">
                 <ul className="space-y-2">
                   {symptomsHistory.map((symptom, idx) => (
                     <li
@@ -946,27 +1094,6 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
               </ScrollArea>
             )}
           </CardContent>
-          {symptomsHistory.length > 0 && (
-            <CardFooter className="pt-0 pb-3 flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => exportConsultation("txt")}
-                className="flex-1 text-xs text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 h-8 border-slate-200 dark:border-slate-700"
-              >
-                <Download className="w-3.5 h-3.5 mr-1" />
-                Export
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsClearConfirmOpen(true)}
-                className="text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 h-8"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </CardFooter>
-          )}
         </Card>
 
         {/* Emergency Triage Rule Banner */}
@@ -987,7 +1114,62 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
             </ul>
           </CardContent>
         </Card>
+
+        {/* Real-time Session Analytics Chart */}
+        <SessionTrendsChart messages={messages} />
       </div>
+
+      {/* Session Summary Document Dialog Modal */}
+      {currentSummaryData && (
+        <SessionSummaryModal
+          isOpen={summaryModalOpen}
+          onClose={() => setSummaryModalOpen(false)}
+          summaryDocument={currentSummaryData.summaryDocument}
+          triageLevel={currentSummaryData.triageLevel}
+          agentName={currentSummaryData.agentName}
+          agentSpecialty={currentSummaryData.agentSpecialty}
+          sessionId={currentSummaryData.sessionId}
+          createdAt={currentSummaryData.createdAt}
+        />
+      )}
+
+      {/* Reset confirmation dialog */}
+      <Dialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-900 dark:text-white">
+              End & Reset Consultation Session?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+              Would you like to generate a clinical summary document before clearing the conversation history?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                resetConsultation();
+                setIsClearConfirmOpen(false);
+                toast.success("Consultation reset");
+              }}
+              className="text-xs text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-950/40"
+            >
+              Clear Without Summary
+            </Button>
+            <Button
+              size="sm"
+              onClick={async () => {
+                setIsClearConfirmOpen(false);
+                await handleGenerateSummary();
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs"
+            >
+              Generate Summary & Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

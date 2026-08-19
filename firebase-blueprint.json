@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Registered user profile information",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "User avatar photo URL"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["userId", "email"]
+    },
+    "TriageSession": {
+      "title": "Triage Consultation Session",
+      "description": "A clinical consultation session with AI medical specialist and generated summary document",
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique consultation session identifier"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID"
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Identifier of the consulted specialist agent"
+        },
+        "agentName": {
+          "type": "string",
+          "description": "Display name of the specialist agent"
+        },
+        "agentSpecialty": {
+          "type": "string",
+          "description": "Medical specialty of the agent"
+        },
+        "symptoms": {
+          "type": "string",
+          "description": "Chief complaint or symptoms described"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["in_progress", "completed"],
+          "description": "Session completion status"
+        },
+        "summaryDocument": {
+          "type": "string",
+          "description": "Structured Markdown/Text formatted clinical triage summary document highlighting key findings and recommended next steps"
+        },
+        "triageLevel": {
+          "type": "string",
+          "enum": ["EMERGENCY", "URGENT", "SEMI-URGENT", "NON-URGENT", "ROUTINE"],
+          "description": "Assigned triage severity level"
+        },
+        "news2Score": {
+          "type": "number",
+          "description": "Computed National Early Warning Score"
+        },
+        "keyFindings": {
+          "type": "string",
+          "description": "Synthesized key clinical findings"
+        },
+        "recommendedNextSteps": {
+          "type": "string",
+          "description": "Actionable next steps and precautions"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session last updated timestamp"
+        }
+      },
+      "required": ["sessionId", "userId", "agentId", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User account document stored per authenticated UID"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": "TriageSession",
+      "description": "Medical triage consultation sessions and formatted summary reports belonging to the user"
+    }
+  }
+}

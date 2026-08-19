@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { 
   Stethoscope, PhoneCall, ShieldAlert, 
   Menu, X, Sparkles, MessageSquare, 
-  Users, Activity, BookOpen, Layers, BarChart3
+  Users, Activity, BookOpen, Layers, BarChart3,
+  FileText, LogIn, LogOut, User as UserIcon, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +15,18 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Agent } from "@/lib/agents";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface NavbarProps {
   activeTab: string;
@@ -30,11 +41,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeAgent,
   onOpenAgentDrawer,
 }) => {
+  const { user, login, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   const navItems = [
     { id: "chat", label: "Triage Chat", icon: MessageSquare, badge: null },
+    { id: "records", label: "Triage Records", icon: FileText, badge: "Summaries" },
     { id: "agents", label: "Specialists", icon: Users, badge: "17 Doctors" },
     { id: "metrics", label: "Health Metrics", icon: BarChart3, badge: "Recharts" },
     { id: "anatomy", label: "Anatomy Mapper", icon: Layers, badge: "Interactive" },
@@ -45,6 +59,31 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (tabId: string) => {
     onSelectTab(tabId);
     setMobileMenuOpen(false);
+  };
+
+  const handleLogin = async () => {
+    setAuthLoading(true);
+    try {
+      await login();
+      toast.success("Signed in successfully with Google");
+    } catch (err: unknown) {
+      const isPopupClosed = err && typeof err === "object" && "code" in err && (err as { code: string }).code === "auth/popup-closed-by-user";
+      if (!isPopupClosed) {
+        const errorMsg = err instanceof Error ? err.message : "Failed to sign in";
+        toast.error("Sign-in error: " + errorMsg);
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Signed out");
+    } catch {
+      toast.error("Sign out failed");
+    }
   };
 
   return (
@@ -83,7 +122,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     isActive
                       ? "bg-blue-600 text-white shadow-xs"
                       : "text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -93,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>{item.label}</span>
                   {item.badge && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
                         isActive
                           ? "bg-blue-800 text-blue-100"
                           : "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800"
@@ -107,13 +146,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* Right Toolbar: Theme Toggle, Active Agent Pill & Emergency Action */}
+          {/* Right Toolbar: Google Auth, Theme Toggle, Active Agent Pill & Emergency Action */}
           <div className="flex items-center space-x-2">
             {/* Active Specialist Pill */}
             <button
               type="button"
               onClick={onOpenAgentDrawer}
-              className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/80 hover:bg-blue-50/70 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-left"
+              className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/80 hover:bg-blue-50/70 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-left"
               title="Click to switch specialist agent"
             >
               <img
@@ -127,11 +166,81 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>{activeAgent.name}</span>
                   <Sparkles className="w-3 h-3 text-blue-500" />
                 </div>
-                <div className="text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-[100px]">
+                <div className="text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-[80px]">
                   {activeAgent.specialty}
                 </div>
               </div>
             </button>
+
+            {/* Google Authentication Control */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 rounded-full flex items-center gap-2 px-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName || "User"}
+                        className="w-6 h-6 rounded-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+                      </div>
+                    )}
+                    <span className="text-xs font-semibold max-w-[90px] truncate text-slate-800 dark:text-slate-200 hidden sm:inline">
+                      {user.displayName?.split(" ")[0] || "Patient"}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">
+                        {user.displayName || "Patient User"}
+                      </p>
+                      <p className="text-[11px] leading-none text-slate-500 truncate">
+                        {user.email}
+                      </p>
+                      <div className="pt-1">
+                        <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] py-0">
+                          <CheckCircle2 className="w-2.5 h-2.5 mr-1" /> Firestore Synced
+                        </Badge>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleNavClick("records")} className="text-xs cursor-pointer">
+                    <FileText className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                    <span>My Triage Records</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavClick("chat")} className="text-xs cursor-pointer">
+                    <MessageSquare className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                    <span>Active Consultation</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-xs text-red-600 dark:text-red-400 cursor-pointer">
+                    <LogOut className="w-3.5 h-3.5 mr-2" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogin}
+                disabled={authLoading}
+                className="text-xs font-semibold h-9 rounded-xl border-blue-200 dark:border-slate-700 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sign In</span>
+              </Button>
+            )}
 
             {/* Dark/Light Theme Toggle Component */}
             <ThemeToggle />
@@ -142,7 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm"
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm h-9 rounded-xl"
                   aria-label="Emergency Hotlines and Red Flags"
                 >
                   <PhoneCall className="w-3.5 h-3.5 animate-pulse" />

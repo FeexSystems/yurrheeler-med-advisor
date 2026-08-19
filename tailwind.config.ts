@@ -62,6 +62,33 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				clinical: {
+					bg: 'hsl(var(--clinical-bg))',
+					surface: 'hsl(var(--clinical-surface))',
+					'surface-elevated': 'hsl(var(--clinical-surface-elevated))',
+					border: 'hsl(var(--clinical-border))',
+					text: 'hsl(var(--clinical-text))',
+					'text-muted': 'hsl(var(--clinical-text-muted))',
+					primary: 'hsl(var(--clinical-primary))',
+					secondary: 'hsl(var(--clinical-secondary))',
+				},
+				state: {
+					neutral: 'hsl(var(--state-neutral))',
+					observing: 'hsl(var(--state-observing))',
+					processing: 'hsl(var(--state-processing))',
+					reviewing: 'hsl(var(--state-reviewing))',
+					attention: 'hsl(var(--state-attention))',
+					warning: 'hsl(var(--state-warning))',
+					critical: 'hsl(var(--state-critical))',
+					resolved: 'hsl(var(--state-resolved))',
+					uncertain: 'hsl(var(--state-uncertain))',
+				},
+				evidence: {
+					high: 'hsl(var(--evidence-high))',
+					medium: 'hsl(var(--evidence-medium))',
+					low: 'hsl(var(--evidence-low))',
+					conflicting: 'hsl(var(--evidence-conflicting))',
 				}
 			},
 			borderRadius: {

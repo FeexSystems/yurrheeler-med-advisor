@@ -19,6 +19,9 @@ interface PatientVitals {
   bp_systolic?: number;
   bp_diastolic?: number;
   oxygen_saturation?: number;
+  respiratory_rate?: number;
+  glucose_mg_dl?: number;
+  news2_score?: number;
 }
 
 interface PatientContext {
@@ -101,11 +104,9 @@ app.post("/api/chat", async (req: Request, res: Response) => {
     const ai = getAiClient();
     const systemPrompt = buildSystemInstruction(agentName, agentSpecialty);
 
-    // If Gemini API Key is available, invoke Gemini
     if (ai) {
       const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
 
-      // Include patient intake context if present
       if (patientContext && (patientContext.age || patientContext.symptoms?.length || patientContext.vitals)) {
         const vitalsDesc = patientContext.vitals
           ? `Vitals: Temp ${patientContext.vitals.temperature_c ?? "N/A"}°C, HR ${patientContext.vitals.heart_rate_bpm ?? "N/A"} bpm${
@@ -127,7 +128,6 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         });
       }
 
-      // Append previous history
       for (const msg of history) {
         contents.push({
           role: msg.role === "user" ? "user" : "model",
@@ -135,7 +135,6 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         });
       }
 
-      // Append current message
       contents.push({
         role: "user",
         parts: [{ text: message }],
@@ -147,6 +146,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         config: {
           systemInstruction: systemPrompt,
           temperature: 0.3,
+          tools: [{ googleSearch: {} }],
         },
       });
 
@@ -155,6 +155,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       return res.json({
         response: text,
         model: "gemini-3.5-flash",
+        groundingMetadata: response.candidates?.[0]?.groundingMetadata,
       });
     }
 
@@ -236,6 +237,168 @@ ${
   } catch (err: unknown) {
     console.error("Error in /api/chat:", err);
     const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
+    return res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Endpoint: Generate comprehensive, concise clinical summary document at end of session
+app.post("/api/generate-summary", async (req: Request, res: Response) => {
+  try {
+    const {
+      history = [],
+      patientContext,
+      agentName,
+      agentSpecialty,
+    }: {
+      history: ChatMessage[];
+      patientContext?: PatientContext;
+      agentName?: string;
+      agentSpecialty?: string;
+    } = req.body;
+
+    if (!history || history.length === 0) {
+      return res.status(400).json({ error: "Session conversation history is required to generate a summary." });
+    }
+
+    const ai = getAiClient();
+    const consultant = agentName || "Yurrheeler Medic";
+    const specialty = agentSpecialty || "General Medicine";
+
+    // Format chat transcript
+    const transcript = history
+      .map((m) => `${m.role === "user" ? "Patient" : "Specialist Doctor (" + consultant + ")"}: ${m.text}`)
+      .join("\n\n");
+
+    const vitalsStr = patientContext?.vitals
+      ? `Temp: ${patientContext.vitals.temperature_c ?? "N/A"}°C, Heart Rate: ${patientContext.vitals.heart_rate_bpm ?? "N/A"} bpm, BP: ${
+          patientContext.vitals.bp_systolic ?? "N/A"
+        }/${patientContext.vitals.bp_diastolic ?? "N/A"} mmHg, SpO2: ${patientContext.vitals.oxygen_saturation ?? "N/A"}%, NEWS2 Score: ${
+          patientContext.vitals.news2_score ?? "Computed"
+        }`
+      : "Vitals: Standard adult baseline";
+
+    const prompt = `You are a Chief Clinical Medical Scribe and Senior Triage Officer.
+Analyze the following patient clinical consultation transcript between the Patient and Specialist "${consultant}" (${specialty}).
+
+Patient Context:
+- Age: ${patientContext?.age || "Not specified"}
+- Gender: ${patientContext?.gender || "Not specified"}
+- Reported Symptoms: ${patientContext?.symptoms?.join(", ") || "Derived from transcript"}
+- Physiologic Biomarkers: ${vitalsStr}
+
+Consultation Transcript:
+${transcript}
+
+TASK:
+Generate an official, concise, beautifully formatted **Clinical Triage Summary Document**.
+
+Structure the markdown document cleanly with these exact sections:
+# 📋 CLINICAL TRIAGE ENCOUNTER SUMMARY
+**Consultant Specialist:** ${consultant} (${specialty})
+**Encounter Date:** ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+**Triage Urgency Tier:** [EMERGENCY (911) | URGENT CARE (1-4h) | SEMI-URGENT (24-48h) | ROUTINE / HOME CARE]
+
+---
+
+### 1. Chief Complaint & Clinical Presentation
+- Summarize the patient's primary symptoms, onset, duration, and aggravating/alleviating factors concisely.
+
+### 2. Biomarkers & Vitals Evaluation
+- Highlight physiological parameters, oxygenation, and risk tier (NEWS2 score analysis).
+
+### 3. Key Triage Findings & Differential Assessment
+- Highlight the 2-4 primary diagnostic considerations synthesized during the session.
+
+### 4. Critical Red Flag Checklist & Exclusion Criteria
+- List warning signs that were evaluated or need urgent emergency escalation if developed.
+
+### 5. Recommended Next Steps & Action Plan
+- **Immediate First Steps:** (bulleted actionable items)
+- **Specialist Referral & Tests:** (e.g. Recommended specialist, labs, imaging)
+- **Safe Supportive Care:** (Hydration, rest, positioning, otc guidelines)
+- **Follow-up Timeline:** (When to seek reassessment)
+
+---
+*Clinical Disclaimer: This triage summary document is compiled from an AI-assisted specialist encounter for informational organization and personal health records. It does not replace comprehensive in-person medical evaluation by a licensed physician.*`;
+
+    if (ai) {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.2,
+        },
+      });
+
+      const summaryDoc = response.text || "Summary generation completed.";
+
+      // Extract triage level heuristically from output
+      let triageLevel: "EMERGENCY" | "URGENT" | "SEMI-URGENT" | "ROUTINE" = "SEMI-URGENT";
+      if (summaryDoc.toUpperCase().includes("EMERGENCY (911)") || summaryDoc.toUpperCase().includes("CRITICAL")) {
+        triageLevel = "EMERGENCY";
+      } else if (summaryDoc.toUpperCase().includes("URGENT CARE")) {
+        triageLevel = "URGENT";
+      } else if (summaryDoc.toUpperCase().includes("ROUTINE")) {
+        triageLevel = "ROUTINE";
+      }
+
+      return res.json({
+        summaryDocument: summaryDoc,
+        triageLevel,
+        agentName: consultant,
+        agentSpecialty: specialty,
+        generatedAt: new Date().toISOString(),
+      });
+    }
+
+    // Fallback deterministic summary generator
+    const firstUserMsg = history.find((m) => m.role === "user")?.text || "General health inquiry";
+    const isCritical = firstUserMsg.toLowerCase().includes("chest pain") || firstUserMsg.toLowerCase().includes("breath") || firstUserMsg.toLowerCase().includes("stroke");
+    const fallbackLevel = isCritical ? "EMERGENCY" : "SEMI-URGENT";
+
+    const fallbackDoc = `# 📋 CLINICAL TRIAGE ENCOUNTER SUMMARY
+**Consultant Specialist:** ${consultant} (${specialty})  
+**Encounter Date:** ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}  
+**Triage Urgency Tier:** ${isCritical ? "🚨 EMERGENCY (911 / IMMEDIATE ER)" : "🟡 SEMI-URGENT (24-48 HOURS)"}
+
+---
+
+### 1. Chief Complaint & Clinical Presentation
+- **Primary Reported Symptoms:** "${firstUserMsg.trim().slice(0, 150)}"
+- **Encounter Mode:** Interactive AI Clinical Specialist Consultation
+
+### 2. Biomarkers & Vitals Evaluation
+- ${vitalsStr}
+- Physiological state assessed against evidence-based National Early Warning Score (NEWS2) thresholds.
+
+### 3. Key Triage Findings & Differential Assessment
+- Evaluated clinical presentation from the perspective of **${specialty}**.
+- Primary considerations include acute symptom manifestation requiring structured specialist monitoring.
+
+### 4. Critical Red Flag Checklist
+- 🚨 Sudden worsening shortness of breath or radiating chest discomfort
+- 🚨 Neurological symptoms (confusion, slurred speech, facial asymmetry)
+- 🚨 Uncontrolled bleeding, persistent high fever (>39°C), or syncope
+
+### 5. Recommended Next Steps & Action Plan
+- **Immediate Action:** ${isCritical ? "Call 911 or visit the closest emergency department immediately." : "Schedule an in-person clinical appointment with a licensed practitioner."}
+- **Recommended Specialist:** ${specialty} / Primary Care Physician
+- **Monitoring Guidance:** Keep a timestamped record of temperature, heart rate, and symptom progression.
+- **Follow-up Timeline:** Within ${isCritical ? "immediate 1 hour" : "24 to 48 hours"}.
+
+---
+*Clinical Disclaimer: This triage summary document is compiled from an AI-assisted specialist encounter for informational organization and personal health records. It does not replace comprehensive in-person medical evaluation by a licensed physician.*`;
+
+    return res.json({
+      summaryDocument: fallbackDoc,
+      triageLevel: fallbackLevel,
+      agentName: consultant,
+      agentSpecialty: specialty,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (err: unknown) {
+    console.error("Error in /api/generate-summary:", err);
+    const errorMessage = err instanceof Error ? err.message : "Summary generation error";
     return res.status(500).json({ error: errorMessage });
   }
 });

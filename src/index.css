@@ -51,6 +51,29 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Semantic Clinical Tokens */
+    --clinical-bg: 220 20% 98%;
+    --clinical-surface: 0 0% 100%;
+    --clinical-surface-elevated: 210 40% 96%;
+    --clinical-border: 214 31.8% 91.4%;
+    --clinical-text: 222.2 84% 4.9%;
+    --clinical-text-muted: 215.4 16.3% 46.9%;
+    --clinical-primary: 221.2 83.2% 53.3%;
+    --clinical-secondary: 210 40% 96.1%;
+    --state-neutral: 210 40% 96.1%;
+    --state-observing: 200 80% 50%;
+    --state-processing: 260 80% 60%;
+    --state-reviewing: 190 80% 40%;
+    --state-attention: 40 90% 50%;
+    --state-warning: 30 90% 50%;
+    --state-critical: 0 84.2% 60.2%;
+    --state-resolved: 142.1 76.2% 36.3%;
+    --state-uncertain: 280 60% 60%;
+    --evidence-high: 142.1 76.2% 36.3%;
+    --evidence-medium: 40 90% 50%;
+    --evidence-low: 30 90% 50%;
+    --evidence-conflicting: 0 84.2% 60.2%;
   }
 
   .dark {
@@ -89,6 +112,29 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Semantic Clinical Tokens (Dark) */
+    --clinical-bg: 224 25% 10%;
+    --clinical-surface: 224 25% 15%;
+    --clinical-surface-elevated: 224 25% 20%;
+    --clinical-border: 224 25% 25%;
+    --clinical-text: 210 40% 98%;
+    --clinical-text-muted: 215 20.2% 65.1%;
+    --clinical-primary: 217.2 91.2% 59.8%;
+    --clinical-secondary: 217.2 32.6% 17.5%;
+    --state-neutral: 217.2 32.6% 17.5%;
+    --state-observing: 200 80% 60%;
+    --state-processing: 260 80% 70%;
+    --state-reviewing: 190 80% 50%;
+    --state-attention: 40 90% 60%;
+    --state-warning: 30 90% 60%;
+    --state-critical: 0 84.2% 65%;
+    --state-resolved: 142.1 70% 45%;
+    --state-uncertain: 280 60% 70%;
+    --evidence-high: 142.1 70% 45%;
+    --evidence-medium: 40 90% 60%;
+    --evidence-low: 30 90% 60%;
+    --evidence-conflicting: 0 84.2% 65%;
   }
 }
 

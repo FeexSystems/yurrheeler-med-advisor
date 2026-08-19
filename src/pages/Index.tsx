@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   MessageSquare, Users, Layers, Activity, 
   BookOpen, ClipboardList, ShieldAlert, Sparkles, HeartPulse, 
-  PhoneCall, Stethoscope, BarChart3
+  PhoneCall, Stethoscope, BarChart3, FileText, Database
 } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { MedicalChatInterface } from "@/components/MedicalChatInterface";
+import { TriageRecordsView } from "@/components/TriageRecordsView";
 import { AgentsDirectory } from "@/components/AgentsDirectory";
 import { AnatomyMapper } from "@/components/AnatomyMapper";
 import { BiomarkersSimulator } from "@/components/BiomarkersSimulator";
@@ -18,6 +19,7 @@ import { ConsultationInterface } from "@/components/ConsultationInterface";
 import { Agent, agents } from "@/lib/agents";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useClinicalStore } from "@/clinical/store";
 
 const Index: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("chat");
@@ -48,13 +50,25 @@ const Index: React.FC = () => {
     glucose: number;
   }) => {
     const summary = `Simulated Vitals: Temp ${vitals.temperature}°C, HR ${vitals.heartRate} bpm, BP ${vitals.systolic}/${vitals.diastolic} mmHg, SpO2 ${vitals.oxygenSat}%, Respiration ${vitals.respiratoryRate}/min, Glucose ${vitals.glucose} mg/dL. Please evaluate clinical triage status.`;
+    
+    // Add to 3D clinical space evidence
+    useClinicalStore.getState().addEvidence({
+      id: `vitals-${Date.now()}`,
+      title: 'Vital Signs (NEWS2)',
+      type: 'observation',
+      source: 'Biomarkers Simulator',
+      confidence: vitals.oxygenSat < 94 || vitals.temperature > 38 ? 'high' : 'medium',
+      relatedRegions: ['chest', 'respiratory'],
+      metadata: vitals
+    });
+
     setPromptSymptom(summary);
     setActiveTab("chat");
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors">
-      {/* Top Navbar with Theme Toggle */}
+      {/* Top Navbar with Theme Toggle & Google Sign-in */}
       <Navbar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -106,68 +120,85 @@ const Index: React.FC = () => {
                 </Badge>
               </div>
               <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-0.5">
-                Multi-agent medical consultation, evidence-based triage stratification, and biomarker risk analytics.
+                Multi-agent medical consultation, automated clinical summaries, and biomarker risk analytics.
               </p>
             </div>
 
             {/* Navigation Tabs Pill Bar */}
-            <TabsList className="bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-300/80 dark:border-slate-700 flex flex-wrap h-auto gap-1">
-              <TabsTrigger
-                value="chat"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>Triage Chat</span>
-              </TabsTrigger>
+            <div className="flex flex-wrap items-center gap-2">
+              <TabsList className="bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-300/80 dark:border-slate-700 flex flex-wrap h-auto gap-1">
+                <TabsTrigger
+                  value="chat"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Triage Chat</span>
+                </TabsTrigger>
 
-              <TabsTrigger
-                value="agents"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>17 Specialists</span>
-              </TabsTrigger>
+                <TabsTrigger
+                  value="records"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Triage Records</span>
+                </TabsTrigger>
 
-              <TabsTrigger
-                value="metrics"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                <span>Health Metrics</span>
-              </TabsTrigger>
+                <TabsTrigger
+                  value="agents"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>17 Specialists</span>
+                </TabsTrigger>
 
-              <TabsTrigger
-                value="anatomy"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Anatomy Mapper</span>
-              </TabsTrigger>
+                <TabsTrigger
+                  value="metrics"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  <span>Health Metrics</span>
+                </TabsTrigger>
 
-              <TabsTrigger
-                value="biomarkers"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-              >
-                <Activity className="w-3.5 h-3.5" />
-                <span>Vitals & NEWS2</span>
-              </TabsTrigger>
+                <TabsTrigger
+                  value="anatomy"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Anatomy Mapper</span>
+                </TabsTrigger>
 
-              <TabsTrigger
-                value="protocols"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Protocols</span>
-              </TabsTrigger>
+                <TabsTrigger
+                  value="biomarkers"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>Vitals & NEWS2</span>
+                </TabsTrigger>
 
-              <TabsTrigger
-                value="intake"
-                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                <TabsTrigger
+                  value="protocols"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Protocols</span>
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="intake"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                >
+                  <ClipboardList className="w-3.5 h-3.5" />
+                  <span>Intake Form</span>
+                </TabsTrigger>
+              </TabsList>
+              <a 
+                href="/clinical-space" 
+                className="bg-clinical-bg border border-clinical-border text-clinical-text text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-clinical-surface-elevated transition-colors shadow-sm"
               >
-                <ClipboardList className="w-3.5 h-3.5" />
-                <span>Intake Form</span>
-              </TabsTrigger>
-            </TabsList>
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                <span>Clinical Space (3D)</span>
+              </a>
+            </div>
           </div>
 
           {/* TAB 1: AI Chat Triage Interface */}
@@ -185,7 +216,22 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 2: 17 Doctors Directory */}
+          {/* TAB 2: Triage Records & Saved Clinical Summaries */}
+          <TabsContent value="records" className="mt-0 focus-visible:outline-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="records-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <TriageRecordsView onNewConsultation={() => setActiveTab("chat")} />
+              </motion.div>
+            </AnimatePresence>
+          </TabsContent>
+
+          {/* TAB 3: 17 Doctors Directory */}
           <TabsContent value="agents" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -203,7 +249,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 3: Health Metrics Dashboard (Recharts Visualizations) */}
+          {/* TAB 4: Health Metrics Dashboard (Recharts Visualizations) */}
           <TabsContent value="metrics" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -218,7 +264,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 4: Anatomy Mapper */}
+          {/* TAB 5: Anatomy Mapper */}
           <TabsContent value="anatomy" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -233,7 +279,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 5: Biomarkers & Vitals Simulator (NEWS2) */}
+          {/* TAB 6: Biomarkers & Vitals Simulator (NEWS2) */}
           <TabsContent value="biomarkers" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -248,7 +294,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 6: Clinical Protocols & Decision Trees */}
+          {/* TAB 7: Clinical Protocols & Decision Trees */}
           <TabsContent value="protocols" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -263,7 +309,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 7: Structured Intake Form */}
+          {/* TAB 8: Structured Intake Form */}
           <TabsContent value="intake" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -296,6 +342,9 @@ const Index: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
               <button onClick={() => setActiveTab("chat")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 AI Triage
+              </button>
+              <button onClick={() => setActiveTab("records")} className="hover:text-blue-600 dark:hover:text-blue-400">
+                Triage Records
               </button>
               <button onClick={() => setActiveTab("agents")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 17 Specialist Doctors
