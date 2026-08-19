@@ -58,54 +58,71 @@ const CLINICAL_PROTOCOLS: ProtocolItem[] = [
   },
   {
     id: "anaphylaxis-protocol",
-    category: "Emergency Medicine",
-    title: "Severe Anaphylaxis & Airway Compromise",
+    category: "Immunology / Allergy",
+    title: "Severe Anaphylactic Shock & Airway Compromise",
     urgency: "CRITICAL 911",
-    summary: "Immediate management of multi-system acute allergic reaction compromising airway or hemodynamics.",
+    summary: "Acute multi-system allergic reaction with impending respiratory failure or vascular collapse.",
     immediateActions: [
-      "Inject Epinephrine (EpiPen) into anterolateral mid-thigh immediately.",
-      "Call 911 and state anaphylaxis shock.",
-      "Lay patient flat with legs elevated unless breathing is labored.",
-      "Repeat second dose of Epinephrine in 5–15 minutes if symptoms persist.",
+      "Administer Intramuscular Epinephrine auto-injector (EpiPen 0.3mg) into anterolateral mid-thigh immediately.",
+      "Call 911 immediately and state 'Anaphylactic Emergency'.",
+      "Lay patient flat with legs elevated unless vomiting or experiencing severe respiratory distress.",
+      "Repeat epinephrine injection after 5–15 minutes if symptoms fail to improve.",
     ],
     diagnosticCriteria: [
-      "Sudden airway stridor, throat tightness, or wheezing",
-      "Rapidly spreading urticaria (hives) and facial/lip angioedema",
-      "Hypotension with dizziness or collapse following allergen exposure",
+      "Rapid onset hives/pruritus with lip/tongue edema (angioedema)",
+      "Inspiratory stridor, wheezing, or tightness in throat",
+      "Hypotension, lightheadedness, or sudden syncope",
     ],
   },
   {
     id: "sepsis-qsofa",
-    category: "Internal Medicine",
-    title: "Sepsis Quick SOFA (qSOFA) Clinical Risk Assessment",
-    urgency: "URGENT CARE",
-    summary: "Bedside screening tool to identify patients with suspected infection at high risk of in-hospital deterioration.",
+    category: "Infectious Disease",
+    title: "Sepsis Quick SOFA (qSOFA) Severity Screening",
+    urgency: "CRITICAL 911",
+    summary: "Bedside score to rapidly identify patients with suspected infection at high risk of in-hospital deterioration.",
     immediateActions: [
-      "Transfer immediately to emergency facility for blood cultures and IV broad-spectrum antibiotics.",
-      "Administer IV crystalloid fluid resuscitation if hypotensive.",
-      "Monitor continuous lactate biomarkers and urine output.",
+      "Seek emergency hospital evaluation immediately for broad-spectrum IV antibiotics and fluid resuscitation.",
+      "Measure core temperature, blood pressure, and pulse oximetry.",
+      "Obtain blood cultures prior to antibiotic administration when possible in emergency care.",
     ],
     diagnosticCriteria: [
-      "Respiratory rate ≥ 22 breaths per minute",
-      "Altered mentation (Glasgow Coma Scale < 15)",
-      "Systolic blood pressure ≤ 100 mmHg",
+      "Respiratory Rate ≥ 22 breaths per minute",
+      "Altered mental status (Glasgow Coma Scale < 15 or acute confusion)",
+      "Systolic Blood Pressure ≤ 100 mmHg",
     ],
   },
   {
-    id: "pediatric-fever",
-    category: "Pediatrics",
-    title: "Pediatric Fever & Dehydration Triage (<3 Months to 5 Years)",
+    id: "dka-hyperglycemia",
+    category: "Endocrinology",
+    title: "Diabetic Ketoacidosis (DKA) & Hyperglycemic Crisis",
     urgency: "URGENT CARE",
-    summary: "Stratification of pediatric febrile illnesses, fontanelle assessment, and hydration status.",
+    summary: "Metabolic emergency characterized by uncontrolled hyperglycemia, metabolic acidosis, and ketonemia.",
     immediateActions: [
-      "Any infant under 3 months with rectal temperature ≥ 38.0°C (100.4°F) requires same-day emergency evaluation.",
-      "Provide oral rehydration solution (ORS) in small, frequent sips.",
-      "Administer weight-based acetaminophen or ibuprofen (if >6 months). Avoid aspirin.",
+      "Check blood glucose immediately (typically >250 mg/dL).",
+      "Check urine ketones using dipstick if available.",
+      "Seek immediate urgent care or emergency department assessment for IV hydration and insulin protocol.",
     ],
     diagnosticCriteria: [
-      "Sunken fontanelle, dry mucous membranes, no wet diapers for >8 hours",
-      "Lethargy, inconsolable crying, or petechial non-blanching rash",
-      "Tachypnea or intercostal retractions during breathing",
+      "Deep, rapid breathing (Kussmaul respiration) with fruity acetone breath odor",
+      "Polydipsia (extreme thirst), polyuria, and severe dehydration",
+      "Nausea, persistent vomiting, and diffuse abdominal pain",
+    ],
+  },
+  {
+    id: "acute-asthma",
+    category: "Pulmonology",
+    title: "Acute Severe Bronchospasm & Asthma Exacerbation",
+    urgency: "URGENT CARE",
+    summary: "Escalation protocol for patients experiencing acute airflow obstruction unresponsive to initial rescue inhalers.",
+    immediateActions: [
+      "Administer 4 to 8 puffs of Albuterol / Salbutamol via spacer every 20 minutes for 1 hour.",
+      "Maintain upright sitting position.",
+      "If peak flow < 50% or patient unable to complete sentences in one breath, call 911.",
+    ],
+    diagnosticCriteria: [
+      "Audible expiratory wheezing with intercostal retractions",
+      "Inability to speak in full sentences without pausing for breath",
+      "SpO2 dropping below 92% on room air",
     ],
   },
 ];
@@ -114,26 +131,25 @@ export const ClinicalProtocols: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = CLINICAL_PROTOCOLS.filter((p) => {
-    const q = searchQuery.toLowerCase();
     return (
-      p.title.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      p.summary.toLowerCase().includes(q)
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.summary.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
         <div>
           <div className="flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-blue-600" />
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               Clinical Triage Protocols & Emergency Decision Trees
             </h2>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Evidence-based medical guidelines, red-flag checklists, and standardized emergency protocols.
           </p>
         </div>
@@ -145,7 +161,7 @@ export const ClinicalProtocols: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search protocol (e.g. stroke, sepsis)..."
-            className="pl-9 text-xs h-10 rounded-xl"
+            className="pl-9 text-xs h-10 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
           />
         </div>
       </div>
@@ -157,20 +173,20 @@ export const ClinicalProtocols: React.FC = () => {
             <AccordionItem
               key={protocol.id}
               value={protocol.id}
-              className="border border-slate-200 rounded-2xl bg-white px-5 shadow-xs overflow-hidden"
+              className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 px-5 shadow-xs overflow-hidden"
             >
               <AccordionTrigger className="hover:no-underline py-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 w-full pr-4 text-left">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm sm:text-base">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
                         {protocol.title}
                       </span>
-                      <Badge variant="outline" className="text-[10px] font-semibold text-blue-700 bg-blue-50">
+                      <Badge variant="outline" className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800">
                         {protocol.category}
                       </Badge>
                     </div>
-                    <p className="text-xs text-slate-500 line-clamp-1">{protocol.summary}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{protocol.summary}</p>
                   </div>
 
                   <Badge
@@ -185,14 +201,14 @@ export const ClinicalProtocols: React.FC = () => {
                 </div>
               </AccordionTrigger>
 
-              <AccordionContent className="pt-2 pb-5 border-t border-slate-100 text-xs text-slate-700 space-y-4">
+              <AccordionContent className="pt-2 pb-5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 space-y-4">
                 {/* Immediate Actions */}
-                <div className="p-3.5 bg-blue-50/60 rounded-xl border border-blue-100 space-y-2">
-                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900/60 space-y-2">
+                  <div className="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span>Immediate Clinical & First Aid Actions:</span>
                   </div>
-                  <ul className="list-disc list-inside space-y-1 text-slate-700 pl-1">
+                  <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300 pl-1">
                     {protocol.immediateActions.map((act, i) => (
                       <li key={i} className="leading-relaxed font-medium">
                         {act}
@@ -202,12 +218,12 @@ export const ClinicalProtocols: React.FC = () => {
                 </div>
 
                 {/* Diagnostic Criteria */}
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                  <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4 text-slate-600" />
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                     <span>Clinical Diagnostic Presentation:</span>
                   </div>
-                  <ul className="list-disc list-inside space-y-1 text-slate-600 pl-1">
+                  <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-300 pl-1">
                     {protocol.diagnosticCriteria.map((crit, i) => (
                       <li key={i} className="leading-relaxed">
                         {crit}

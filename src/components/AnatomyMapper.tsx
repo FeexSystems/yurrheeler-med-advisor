@@ -60,23 +60,23 @@ const BODY_REGIONS: BodyRegion[] = [
     description: "Assesses cerebrovascular health, migraines, cranial nerves, seizures, and neuropathic disorders.",
   },
   {
-    id: "lungs",
-    name: "Lungs & Respiratory",
-    agentId: "pulmono",
+    id: "respiratory",
+    name: "Lungs & Respiratory Tract",
+    agentId: "pulmo",
     icon: Wind,
     color: "from-sky-500 to-blue-600",
     commonSymptoms: [
-      "Persistent dry or productive cough",
-      "Wheezing or audible stridor",
-      "Chest tightness during deep inspiration",
-      "Sleep apnea or daytime excessive sleepiness",
+      "Persistent productive or dry cough",
+      "Wheezing or inspiratory stridor",
+      "Chest tightness during deep inhalation",
+      "Post-viral airway reactivity",
     ],
     redFlags: [
+      "Severe dyspnea at rest / inability to speak full sentences",
       "Hemoptysis (coughing up bright red blood)",
-      "Severe resting dyspnea with cyanosis (blue lips)",
-      "Oxygen saturation SpO2 dropping below 92%",
+      "Cyanosis (bluish tint around lips or fingernails)",
     ],
-    description: "Specialized in pulmonary function, asthma, COPD, pneumonia, sleep disorders, and gas exchange.",
+    description: "Assesses asthma exacerbations, bronchitis, COPD, pneumonia, and oxygen saturation deficits.",
   },
   {
     id: "abdomen",
@@ -85,104 +85,107 @@ const BODY_REGIONS: BodyRegion[] = [
     icon: Activity,
     color: "from-amber-500 to-orange-600",
     commonSymptoms: [
-      "Epigastric burning or acid reflux (GERD)",
-      "Cramping abdominal pain or bloating",
-      "Altered bowel habits (diarrhea or constipation)",
-      "Nausea, vomiting, or appetite changes",
+      "Epigastric burning / acid reflux",
+      "Right lower quadrant tenderness",
+      "Bloating, cramping, and irregular bowel habits",
+      "Postprandial nausea or dyspepsia",
     ],
     redFlags: [
-      "Severe acute right lower quadrant pain (appendicitis)",
-      "Melena (black tarry stools) or hematemesis (vomiting blood)",
-      "Involuntary abdominal rigidity or rebound tenderness",
+      "Rigid board-like abdomen with severe rebound tenderness",
+      "Hematemesis (coffee-ground vomit) or melena (black tarry stool)",
+      "Jaundice (yellowing of skin or eyes) with fever",
     ],
-    description: "Analyzes gastrointestinal motility, liver enzymes, inflammatory bowel disease, and digestive disorders.",
+    description: "Evaluates appendicitis, gallstones, gastroesophageal reflux, peptic ulcers, and bowel inflammation.",
   },
   {
     id: "joints",
-    name: "Bones, Spine & Joints",
-    agentId: "orthop",
+    name: "Musculoskeletal & Joints",
+    agentId: "ortho",
     icon: Layers,
     color: "from-emerald-500 to-teal-600",
     commonSymptoms: [
-      "Joint stiffness, swelling, or reduced range of motion",
-      "Lower back pain radiating into buttocks or leg",
-      "Localized pain following acute trauma or twist",
-      "Crackling sensations (crepitus) in knees or shoulders",
+      "Joint swelling, stiffness, or reduced range of motion",
+      "Acute ligament strain after physical trauma",
+      "Localized bone tenderness or deformity",
+      "Morning joint stiffness >30 minutes",
     ],
     redFlags: [
-      "Visible bone deformity or open fracture",
-      "Loss of bowel or bladder control (cauda equina syndrome)",
-      "Rapidly hot, erythematous, swollen joint with fever (septic arthritis)",
+      "Inability to bear weight on injured limb with rapid hematoma",
+      "Open compound fracture or gross anatomical deformity",
+      "Hot, acutely swollen joint with high systemic fever (septic arthritis)",
     ],
-    description: "Covers musculoskeletal trauma, arthritis, spinal discs, ligaments, fractures, and rehabilitation.",
+    description: "Assesses fractures, ligament sprains, osteoarthritis, bursitis, and spinal biomechanics.",
   },
   {
     id: "skin",
-    name: "Skin & Integumentary",
+    name: "Skin, Hair & Integumentary",
     agentId: "derma",
     icon: Sparkles,
     color: "from-pink-500 to-rose-500",
     commonSymptoms: [
-      "Pruritic (itchy) rash or hives (urticaria)",
-      "Dry, flaking, or eczematous plaques",
-      "Unusual or evolving skin moles",
-      "Acne breakouts, cysts, or localized redness",
+      "Erythematous itchy rash or urticaria",
+      "New or evolving asymmetrical pigmented mole",
+      "Flaking, scaling eczema plaques",
+      "Localized acneiform lesions or pustules",
     ],
     redFlags: [
-      "ABCDE mole changes (Asymmetry, Border, Color, Diameter, Evolution)",
-      "Rapidly spreading cellulitis with systemic fever",
-      "Widespread painful blistering or mucosal ulcerations",
+      "Rapidly spreading erythema with skin necrosis or bullae",
+      "Facial edema / tongue swelling with rash (anaphylaxis)",
+      "ABCDE melanoma red flags (Asymmetry, Border irregularity, Color variegation, Diameter >6mm, Evolution)",
     ],
-    description: "Focuses on dermatologic pathology, melanoma screening, psoriasis, allergic eczema, and wound healing.",
+    description: "Screens for malignant melanoma, atopic dermatitis, cellulitis, shingles, and allergic reactions.",
   },
 ];
 
 interface AnatomyMapperProps {
-  onConsultAgent: (agent: Agent, promptSymptom?: string) => void;
+  onConsultAgent: (agent: Agent, symptom?: string) => void;
 }
 
 export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) => {
   const [selectedRegionId, setSelectedRegionId] = useState<string>("chest");
 
-  const currentRegion = BODY_REGIONS.find((r) => r.id === selectedRegionId) || BODY_REGIONS[0];
+  const currentRegion =
+    BODY_REGIONS.find((r) => r.id === selectedRegionId) || BODY_REGIONS[0];
+
   const assignedAgent = getAgentById(currentRegion.agentId) || agents[0];
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Layers className="w-6 h-6 text-blue-600" />
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-            Interactive Anatomical Symptom Mapper
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="flex items-center gap-2 mb-1">
+          <Layers className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Interactive Anatomical Triage & Symptom Mapper
           </h2>
+          <Badge className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold text-xs">
+            Zone Diagnostics
+          </Badge>
         </div>
-        <p className="text-sm text-slate-600 mt-1">
-          Select an anatomical body zone to explore clinical symptom patterns, warning indicators, and launch an AI consultation with the designated specialist doctor.
+        <p className="text-sm text-slate-600 dark:text-slate-400 max-w-3xl">
+          Select an anatomical body region to explore common clinical symptom presentations, identify emergency red flag signs, and connect immediately to the corresponding medical specialist.
         </p>
       </div>
 
+      {/* Main Grid: Body Zones List vs Detailed Zone Explorer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Interactive Body Region Selector Buttons (5 cols) */}
+        {/* Left: Body Regions Selector (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Select Anatomical Zone:
-            </div>
-
+          <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">
+            Anatomical Body Zones:
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
             {BODY_REGIONS.map((region) => {
-              const Icon = region.icon;
               const isSelected = region.id === selectedRegionId;
-              const regionAgent = getAgentById(region.agentId);
-
+              const Icon = region.icon;
               return (
                 <button
                   key={region.id}
                   onClick={() => setSelectedRegionId(region.id)}
-                  className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
+                  className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between group ${
                     isSelected
-                      ? "border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20 shadow-xs"
-                      : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-300"
+                      ? "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm"
+                      : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -192,16 +195,18 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-bold text-sm text-slate-900">{region.name}</div>
-                      <div className="text-xs text-blue-600 font-medium">
-                        Specialist: {regionAgent?.name} ({regionAgent?.specialty})
+                      <div className="font-bold text-sm text-slate-900 dark:text-white">
+                        {region.name}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {getAgentById(region.agentId)?.specialty} Specialist
                       </div>
                     </div>
                   </div>
 
                   <ArrowRight
                     className={`w-4 h-4 transition-transform ${
-                      isSelected ? "text-blue-600 translate-x-1" : "text-slate-400"
+                      isSelected ? "text-blue-600 dark:text-blue-400 translate-x-1" : "text-slate-400 dark:text-slate-500"
                     }`}
                   />
                 </button>
@@ -220,8 +225,8 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl">
-                <CardHeader className="p-6 pb-4 bg-gradient-to-r from-slate-50 to-blue-50/40 border-b border-slate-100">
+              <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden rounded-2xl">
+                <CardHeader className="p-6 pb-4 bg-gradient-to-r from-slate-50 to-blue-50/40 dark:from-slate-900 dark:to-slate-800/60 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3.5">
                       <div
@@ -230,10 +235,10 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                         <currentRegion.icon className="w-6 h-6" />
                       </div>
                       <div>
-                        <CardTitle className="text-xl font-bold text-slate-900">
+                        <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
                           {currentRegion.name}
                         </CardTitle>
-                        <CardDescription className="text-xs text-slate-600 mt-0.5">
+                        <CardDescription className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                           {currentRegion.description}
                         </CardDescription>
                       </div>
@@ -248,8 +253,8 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                 <CardContent className="p-6 space-y-5">
                   {/* Common Clinical Symptoms */}
                   <div>
-                    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-blue-600" />
+                    <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       Characteristic Symptoms for this Zone:
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -257,7 +262,7 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                         <button
                           key={idx}
                           onClick={() => onConsultAgent(assignedAgent, sym)}
-                          className="p-2.5 bg-slate-50 hover:bg-blue-50/80 text-left rounded-xl border border-slate-200/90 text-xs text-slate-700 hover:text-blue-700 transition-all font-medium flex items-center justify-between group"
+                          className="p-2.5 bg-slate-50 dark:bg-slate-800/70 hover:bg-blue-50/80 dark:hover:bg-slate-700 text-left rounded-xl border border-slate-200/90 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 transition-all font-medium flex items-center justify-between group"
                         >
                           <span>{sym}</span>
                           <Sparkles className="w-3 h-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -267,12 +272,12 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                   </div>
 
                   {/* Red Flag Warning Box */}
-                  <div className="p-4 bg-red-50/70 border border-red-200 rounded-xl space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-red-900">
-                      <ShieldAlert className="w-4 h-4 text-red-600" />
+                  <div className="p-4 bg-red-50/70 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-red-900 dark:text-red-300">
+                      <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />
                       <span>Critical Red Flag Symptoms (Seek Immediate Emergency Care):</span>
                     </div>
-                    <ul className="list-disc list-inside text-xs text-slate-700 space-y-1 pl-1">
+                    <ul className="list-disc list-inside text-xs text-slate-700 dark:text-slate-300 space-y-1 pl-1">
                       {currentRegion.redFlags.map((flag, idx) => (
                         <li key={idx} className="leading-relaxed font-medium">
                           {flag}
@@ -282,7 +287,7 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                   </div>
 
                   {/* Attending Specialist Banner */}
-                  <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-100 flex items-center justify-between gap-4">
+                  <div className="p-4 bg-blue-50/60 dark:bg-blue-950/40 rounded-xl border border-blue-100 dark:border-blue-900/60 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <img
                         src={assignedAgent.avatar_url}
@@ -291,9 +296,9 @@ export const AnatomyMapper: React.FC<AnatomyMapperProps> = ({ onConsultAgent }) 
                         referrerPolicy="no-referrer"
                       />
                       <div>
-                        <div className="font-bold text-sm text-slate-900">{assignedAgent.name}</div>
-                        <div className="text-xs text-blue-600 font-semibold">{assignedAgent.specialty} Specialist</div>
-                        <div className="text-[11px] text-slate-500">Ready for instant AI triage session</div>
+                        <div className="font-bold text-sm text-slate-900 dark:text-white">{assignedAgent.name}</div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold">{assignedAgent.specialty} Specialist</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">Ready for instant AI triage session</div>
                       </div>
                     </div>
 

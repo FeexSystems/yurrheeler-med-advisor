@@ -1,11 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Send, RefreshCw, AlertTriangle, ShieldCheck, 
   Clock, Activity, Sparkles, Copy, Check, Heart, Thermometer,
   FileText, Trash2, User, Bot, AlertCircle, Info, Download,
-  Mic, MicOff, ChevronDown, CheckCircle2, UserCheck, Stethoscope
+  Mic, MicOff, ChevronDown, CheckCircle2, UserCheck, Stethoscope,
+  BookOpen
 } from "lucide-react";
 
 import { useMedicalConsultation } from "@/hooks/useMedicalConsultation";
@@ -16,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
@@ -34,6 +36,95 @@ const QUICK_SYMPTOMS = [
   "Twisted ankle with rapid swelling and difficulty bearing weight",
   "Frequent urination, excessive thirst, and unexplained fatigue",
 ];
+
+// Component to track and render reading progress for longer AI triage reports
+const AIReportReadingCard: React.FC<{
+  text: string;
+  msgId: string;
+  specialty: string;
+  onCopy: (id: string, text: string) => void;
+  isCopied: boolean;
+}> = ({ text, msgId, specialty, onCopy, isCopied }) => {
+  const [scrollProgress, setScrollProgress] = useState<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Estimate reading time in minutes
+  const readingTimeMin = useMemo(() => {
+    const words = text.trim().split(/\s+/).length;
+    return Math.max(1, Math.ceil(words / 180));
+  }, [text]);
+
+  const isLongReport = text.length > 350;
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const totalHeight = target.scrollHeight - target.clientHeight;
+    if (totalHeight > 0) {
+      const progress = Math.min(100, Math.round((target.scrollTop / totalHeight) * 100));
+      setScrollProgress(progress);
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full">
+      {/* Subtle reading progress indicator bar for long reports */}
+      {isLongReport && (
+        <div className="mb-2 px-1">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+            <span className="flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400">
+              <BookOpen className="w-3 h-3" />
+              <span>Clinical Triage Report • ~{readingTimeMin} min read</span>
+            </span>
+            <span className="font-mono font-semibold">{scrollProgress}% read</span>
+          </div>
+          <Progress
+            value={Math.max(5, scrollProgress)}
+            className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full"
+          />
+        </div>
+      )}
+
+      {/* Report Markdown Content with internal scroll detection */}
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className={`text-slate-800 dark:text-slate-200 text-sm leading-relaxed space-y-3 ${
+          isLongReport ? "max-h-96 overflow-y-auto pr-1.5 scrollbar-thin" : ""
+        }`}
+      >
+        <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:mb-1.5 prose-headings:mt-3 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 prose-strong:text-slate-900 dark:prose-strong:text-white prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50/50 dark:prose-blockquote:bg-blue-950/30 prose-blockquote:py-1.5 prose-blockquote:px-3 prose-blockquote:rounded-r-md">
+          <ReactMarkdown>{text}</ReactMarkdown>
+        </div>
+      </div>
+
+      {/* Response Footer Actions */}
+      <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 dark:border-slate-800 mt-3 text-xs text-slate-400 dark:text-slate-500">
+        <span className="text-[10px]">
+          Consultation with {specialty} Specialist
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onCopy(msgId, text)}
+          className="h-6 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label="Copy advice transcript"
+        >
+          {isCopied ? (
+            <>
+              <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 mr-1" />
+              <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3 h-3 mr-1" />
+              <span>Copy</span>
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 interface MedicalChatInterfaceProps {
   initialSymptom?: string;
@@ -186,7 +277,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
       case "routine":
       default:
         return (
-          <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50 flex items-center gap-1">
+          <Badge variant="outline" className="text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 flex items-center gap-1">
             <ShieldCheck className="w-3 h-3" /> Routine / Informational
           </Badge>
         );
@@ -198,7 +289,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
       {/* Main Chat Stream (8 columns on large screens) */}
       <div className="lg:col-span-8 flex flex-col space-y-4">
         {/* Chat Consultation Header Card */}
-        <Card className="border-slate-200/90 shadow-sm bg-white overflow-hidden">
+        <Card className="border-slate-200/90 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
           <CardHeader className="p-4 sm:p-5 pb-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Active Agent Info & Switcher Trigger */}
@@ -212,20 +303,20 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                   />
                   <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
                   </span>
                 </div>
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-slate-900 leading-tight">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
                       {selectedAgent.name}
                     </h2>
-                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs font-semibold py-0.5">
+                    <Badge className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800 text-xs font-semibold py-0.5">
                       {selectedAgent.specialty}
                     </Badge>
                   </div>
-                  <p className="text-slate-500 text-xs line-clamp-1 max-w-md mt-0.5">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-1 max-w-md mt-0.5">
                     {selectedAgent.description}
                   </p>
                 </div>
@@ -239,20 +330,20 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-semibold border-slate-300 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-1.5 h-9"
+                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 h-9"
                     >
-                      <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                      <UserCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                       <span>Switch Specialist ({allAgents.length})</span>
                       <ChevronDown className="w-3 h-3 opacity-60" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-3 border-b border-slate-100">
-                      <DialogTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
-                        <Stethoscope className="w-5 h-5 text-blue-600" />
+                  <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                    <DialogHeader className="p-6 pb-3 border-b border-slate-100 dark:border-slate-800">
+                      <DialogTitle className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                        <Stethoscope className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         Select Medical Specialist
                       </DialogTitle>
-                      <DialogDescription>
+                      <DialogDescription className="text-slate-500 dark:text-slate-400">
                         Choose from our 17 specialized AI medical agents to tailor your clinical triage.
                       </DialogDescription>
                     </DialogHeader>
@@ -267,29 +358,29 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                               onClick={() => handleSelectAgentAndClose(agent)}
                               className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 relative ${
                                 isCurrent
-                                  ? "border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-sm"
-                                  : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
+                                  ? "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 ring-2 ring-blue-500/20 shadow-sm"
+                                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                               }`}
                             >
                               <img
                                 src={agent.avatar_url}
                                 alt={agent.name}
-                                className="w-11 h-11 rounded-xl object-cover border border-slate-200 flex-shrink-0"
+                                className="w-11 h-11 rounded-xl object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0"
                                 referrerPolicy="no-referrer"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1 mb-0.5">
-                                  <span className="font-bold text-sm text-slate-900 truncate">
+                                  <span className="font-bold text-sm text-slate-900 dark:text-white truncate">
                                     {agent.name}
                                   </span>
                                   {isCurrent && (
-                                    <CheckCircle2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                   )}
                                 </div>
-                                <div className="text-[11px] font-semibold text-blue-600 mb-1">
+                                <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mb-1">
                                   {agent.specialty}
                                 </div>
-                                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                                   {agent.description}
                                 </p>
                               </div>
@@ -307,19 +398,19 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-semibold border-slate-300 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-1.5 h-9"
+                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1.5 h-9"
                     >
-                      <Activity className="w-3.5 h-3.5 text-emerald-600" />
+                      <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>{patientContext.age ? `Patient (${patientContext.age}y)` : "Vitals"}</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
+                  <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2 text-slate-900">
+                      <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
                         <Heart className="w-5 h-5 text-red-500" />
                         Patient Clinical Baseline & Vitals
                       </DialogTitle>
-                      <DialogDescription>
+                      <DialogDescription className="text-slate-500 dark:text-slate-400">
                         Refine clinical triage predictions by recording current patient vitals.
                       </DialogDescription>
                     </DialogHeader>
@@ -335,6 +426,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                             value={vitalsForm.age}
                             onChange={(e) => setVitalsForm({ ...vitalsForm, age: e.target.value })}
                             placeholder="35"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -343,10 +435,10 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                             value={vitalsForm.gender}
                             onValueChange={(val) => setVitalsForm({ ...vitalsForm, gender: val })}
                           >
-                            <SelectTrigger id="patient-gender">
+                            <SelectTrigger id="patient-gender" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                               <SelectValue placeholder="Select sex" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                               <SelectItem value="male">Male</SelectItem>
                               <SelectItem value="female">Female</SelectItem>
                               <SelectItem value="other">Other</SelectItem>
@@ -355,7 +447,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                         </div>
                       </div>
 
-                      <Separator />
+                      <Separator className="dark:bg-slate-800" />
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
@@ -370,6 +462,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                             value={vitalsForm.temperature}
                             onChange={(e) => setVitalsForm({ ...vitalsForm, temperature: e.target.value })}
                             placeholder="37.0"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -383,6 +476,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                             value={vitalsForm.heartRate}
                             onChange={(e) => setVitalsForm({ ...vitalsForm, heartRate: e.target.value })}
                             placeholder="72"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                           />
                         </div>
                       </div>
@@ -397,6 +491,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                               value={vitalsForm.systolic}
                               onChange={(e) => setVitalsForm({ ...vitalsForm, systolic: e.target.value })}
                               placeholder="120"
+                              className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                             />
                             <span>/</span>
                             <Input
@@ -405,6 +500,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                               value={vitalsForm.diastolic}
                               onChange={(e) => setVitalsForm({ ...vitalsForm, diastolic: e.target.value })}
                               placeholder="80"
+                              className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                             />
                           </div>
                         </div>
@@ -418,6 +514,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                             value={vitalsForm.oxygenSat}
                             onChange={(e) => setVitalsForm({ ...vitalsForm, oxygenSat: e.target.value })}
                             placeholder="98"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                           />
                         </div>
                       </div>
@@ -440,23 +537,23 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs font-semibold border-slate-300 hover:bg-slate-100 flex items-center gap-1 h-9 px-2.5"
+                      className="text-xs font-semibold border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 h-9 px-2.5"
                       aria-label="Export consultation transcript"
                     >
-                      <Download className="w-3.5 h-3.5 text-slate-600" />
+                      <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                       <span className="hidden sm:inline">Export</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel className="text-xs text-slate-500 font-normal">
+                  <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                    <DropdownMenuLabel className="text-xs text-slate-500 dark:text-slate-400 font-normal">
                       Export Consultation
                     </DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => exportConsultation("txt")} className="text-xs cursor-pointer">
-                      <FileText className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                      <FileText className="w-3.5 h-3.5 mr-2 text-blue-600 dark:text-blue-400" />
                       Download Clinical Summary (.txt)
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => exportConsultation("json")} className="text-xs cursor-pointer">
-                      <Download className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+                      <Download className="w-3.5 h-3.5 mr-2 text-emerald-600 dark:text-emerald-400" />
                       Download Raw Data (.json)
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -468,20 +565,20 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 flex items-center gap-1 h-9 px-2.5"
+                      className="text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-1 h-9 px-2.5"
                       aria-label="Clear conversation history and start fresh consultation"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Clear</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
+                  <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                     <DialogHeader>
-                      <DialogTitle className="text-slate-900 flex items-center gap-2">
+                      <DialogTitle className="text-slate-900 dark:text-white flex items-center gap-2">
                         <Trash2 className="w-5 h-5 text-red-500" />
                         Clear Conversation History?
                       </DialogTitle>
-                      <DialogDescription>
+                      <DialogDescription className="text-slate-500 dark:text-slate-400">
                         This will reset the active chat transcript, recorded symptoms, and start a fresh clinical consultation with {selectedAgent.name}.
                       </DialogDescription>
                     </DialogHeader>
@@ -508,7 +605,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
         </Card>
 
         {/* Message Thread Scroll Area */}
-        <Card className="flex-1 border-slate-200/90 shadow-sm flex flex-col min-h-[520px] max-h-[640px] bg-slate-50/50">
+        <Card className="flex-1 border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col min-h-[520px] max-h-[640px] bg-slate-50/50 dark:bg-slate-950/40">
           <ScrollArea className="flex-1 p-4 sm:p-6 overflow-y-auto">
             <div className="space-y-6">
               {messages.map((msg) => {
@@ -527,71 +624,47 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                       <img
                         src={selectedAgent.avatar_url}
                         alt={selectedAgent.name}
-                        className="flex-shrink-0 w-9 h-9 rounded-xl object-cover border border-blue-300 shadow-sm"
+                        className="flex-shrink-0 w-9 h-9 rounded-xl object-cover border border-blue-300 dark:border-blue-600 shadow-sm"
                         referrerPolicy="no-referrer"
                       />
                     )}
 
                     {/* Message Bubble */}
                     <div
-                      className={`flex flex-col max-w-[88%] sm:max-w-[82%] ${
+                      className={`flex flex-col max-w-[90%] sm:max-w-[84%] ${
                         isUser ? "items-end" : "items-start"
                       }`}
                     >
                       {/* Sender label, urgency badge, and SUBTLE LOCALIZED TIMESTAMP */}
                       <div className="flex items-center gap-2 mb-1 px-1">
-                        <span className="text-xs font-semibold text-slate-700">
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                           {isUser ? "Patient" : selectedAgent.name}
                         </span>
                         {!isUser && getUrgencyBadge(msg.urgency)}
                         {/* Subtle localized timestamp */}
-                        <span className="text-[11px] text-slate-400 font-mono tracking-tight">
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono tracking-tight">
                           {msg.timestamp}
                         </span>
                       </div>
 
-                      {/* Content Card */}
+                      {/* Content Card with Reading Progress for AI Reports */}
                       <div
                         className={`rounded-2xl p-4 sm:p-5 shadow-sm text-sm leading-relaxed ${
                           isUser
                             ? "bg-blue-600 text-white rounded-tr-none font-medium"
-                            : "bg-white text-slate-800 border border-slate-200/90 rounded-tl-none"
+                            : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-800 rounded-tl-none"
                         }`}
                       >
                         {isUser ? (
                           <p className="whitespace-pre-wrap">{msg.text}</p>
                         ) : (
-                          <div className="space-y-3 text-slate-800">
-                            <div className="prose prose-sm max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-headings:mb-1.5 prose-headings:mt-3 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 prose-strong:text-slate-900 prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50/50 prose-blockquote:py-1.5 prose-blockquote:px-3 prose-blockquote:rounded-r-md">
-                              <ReactMarkdown>{msg.text}</ReactMarkdown>
-                            </div>
-
-                            {/* Response Actions */}
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-3 text-xs text-slate-400">
-                              <span className="text-[10px]">
-                                Consultation with {selectedAgent.specialty} Specialist
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleCopy(msg.id, msg.text)}
-                                className="h-6 px-2 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-                                aria-label="Copy advice transcript"
-                              >
-                                {copiedId === msg.id ? (
-                                  <>
-                                    <Check className="w-3 h-3 text-emerald-600 mr-1" />
-                                    <span className="text-emerald-600">Copied</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="w-3 h-3 mr-1" />
-                                    <span>Copy</span>
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
+                          <AIReportReadingCard
+                            text={msg.text}
+                            msgId={msg.id}
+                            specialty={selectedAgent.specialty}
+                            onCopy={handleCopy}
+                            isCopied={copiedId === msg.id}
+                          />
                         )}
                       </div>
                     </div>
@@ -605,46 +678,46 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                   <img
                     src={selectedAgent.avatar_url}
                     alt={selectedAgent.name}
-                    className="flex-shrink-0 w-9 h-9 rounded-xl object-cover border border-blue-300 shadow-sm animate-pulse"
+                    className="flex-shrink-0 w-9 h-9 rounded-xl object-cover border border-blue-300 dark:border-blue-600 shadow-sm animate-pulse"
                     referrerPolicy="no-referrer"
                   />
                   <div className="flex flex-col w-full max-w-[88%] sm:max-w-[82%] space-y-2">
                     <div className="flex items-center gap-2 px-1">
-                      <span className="text-xs font-semibold text-slate-700">{selectedAgent.name}</span>
-                      <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 animate-pulse text-[11px] flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 animate-spin text-blue-600" />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{selectedAgent.name}</span>
+                      <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 animate-pulse text-[11px] flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 animate-spin text-blue-600 dark:text-blue-400" />
                         Clinical Triage & Differential Evaluation...
                       </Badge>
                     </div>
 
                     {/* Rich Skeleton Structure */}
-                    <Card className="p-4 sm:p-5 bg-white border border-blue-100 shadow-sm space-y-3.5 rounded-tl-none">
+                    <Card className="p-4 sm:p-5 bg-white dark:bg-slate-900 border border-blue-100 dark:border-slate-800 shadow-sm space-y-3.5 rounded-tl-none">
                       <div className="flex items-center space-x-3">
-                        <Skeleton className="h-5 w-40 bg-blue-100/80" />
-                        <Skeleton className="h-5 w-28 bg-slate-200" />
+                        <Skeleton className="h-5 w-40 bg-blue-100/80 dark:bg-blue-900/40" />
+                        <Skeleton className="h-5 w-28 bg-slate-200 dark:bg-slate-800" />
                       </div>
 
                       <div className="space-y-2 pt-1">
-                        <Skeleton className="h-4 w-full bg-slate-200" />
-                        <Skeleton className="h-4 w-[92%] bg-slate-200" />
-                        <Skeleton className="h-4 w-[78%] bg-slate-200" />
+                        <Skeleton className="h-4 w-full bg-slate-200 dark:bg-slate-800" />
+                        <Skeleton className="h-4 w-[92%] bg-slate-200 dark:bg-slate-800" />
+                        <Skeleton className="h-4 w-[78%] bg-slate-200 dark:bg-slate-800" />
                       </div>
 
-                      <div className="p-3 bg-slate-50 rounded-xl space-y-2 border border-slate-100">
-                        <Skeleton className="h-4 w-48 bg-slate-300" />
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-2 border border-slate-100 dark:border-slate-800">
+                        <Skeleton className="h-4 w-48 bg-slate-300 dark:bg-slate-700" />
                         <div className="flex gap-2 items-center">
-                          <Skeleton className="h-3.5 w-3.5 rounded-full bg-emerald-200" />
-                          <Skeleton className="h-3.5 w-[85%] bg-slate-200" />
+                          <Skeleton className="h-3.5 w-3.5 rounded-full bg-emerald-200 dark:bg-emerald-800" />
+                          <Skeleton className="h-3.5 w-[85%] bg-slate-200 dark:bg-slate-800" />
                         </div>
                         <div className="flex gap-2 items-center">
-                          <Skeleton className="h-3.5 w-3.5 rounded-full bg-emerald-200" />
-                          <Skeleton className="h-3.5 w-[70%] bg-slate-200" />
+                          <Skeleton className="h-3.5 w-3.5 rounded-full bg-emerald-200 dark:bg-emerald-800" />
+                          <Skeleton className="h-3.5 w-[70%] bg-slate-200 dark:bg-slate-800" />
                         </div>
                       </div>
 
                       <div className="flex justify-between items-center pt-1">
-                        <Skeleton className="h-3 w-36 bg-slate-200" />
-                        <Skeleton className="h-3 w-16 bg-slate-200" />
+                        <Skeleton className="h-3 w-36 bg-slate-200 dark:bg-slate-800" />
+                        <Skeleton className="h-3 w-16 bg-slate-200 dark:bg-slate-800" />
                       </div>
                     </Card>
                   </div>
@@ -657,9 +730,9 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
           </ScrollArea>
 
           {/* Quick Symptom Chips */}
-          <div className="px-4 py-2.5 bg-slate-100/70 border-t border-slate-200/80">
+          <div className="px-4 py-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-t border-slate-200/80 dark:border-slate-800">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap pl-1">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap pl-1">
                 Quick Prompts:
               </span>
               {QUICK_SYMPTOMS.map((chip, idx) => (
@@ -672,7 +745,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                       textareaRef.current.focus();
                     }
                   }}
-                  className="px-3 py-1 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200/90 rounded-full transition-all whitespace-nowrap text-xs shadow-2xs font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 border border-slate-200/90 dark:border-slate-700 rounded-full transition-all whitespace-nowrap text-xs shadow-2xs font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 >
                   {chip}
                 </button>
@@ -687,7 +760,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-red-500/10 border-t border-red-200 px-4 py-2 flex items-center justify-between text-xs text-red-900"
+                className="bg-red-500/10 dark:bg-red-950/40 border-t border-red-200 dark:border-red-900 px-4 py-2 flex items-center justify-between text-xs text-red-900 dark:text-red-200"
               >
                 <div className="flex items-center gap-2">
                   <span className="flex h-2.5 w-2.5 relative">
@@ -697,7 +770,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                   <span className="font-semibold">Microphone Active: Dictate your symptoms clearly...</span>
                 </div>
                 {interimTranscript && (
-                  <span className="italic text-slate-600 truncate max-w-xs sm:max-w-md">
+                  <span className="italic text-slate-600 dark:text-slate-300 truncate max-w-xs sm:max-w-md">
                     "{interimTranscript}"
                   </span>
                 )}
@@ -705,7 +778,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                   size="sm"
                   variant="ghost"
                   onClick={stopListening}
-                  className="h-6 text-xs text-red-700 hover:bg-red-100"
+                  className="h-6 text-xs text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950"
                 >
                   Done
                 </Button>
@@ -714,7 +787,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
           </AnimatePresence>
 
           {/* Accessible Chat Input Form */}
-          <CardFooter className="p-3 sm:p-4 bg-white border-t border-slate-200">
+          <CardFooter className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
             <form onSubmit={handleSubmit} className="w-full flex flex-col sm:flex-row gap-2.5">
               <div className="flex-1 relative">
                 <Textarea
@@ -725,7 +798,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                   onChange={(e) => setInputVal(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={`Describe your symptoms to ${selectedAgent.name} (e.g., onset, pain 1-10, location, vitals)...`}
-                  className="resize-none min-h-[58px] max-h-32 text-sm pr-14 focus-visible:ring-2 focus-visible:ring-blue-600 border-slate-300 rounded-xl"
+                  className="resize-none min-h-[58px] max-h-32 text-sm pr-14 focus-visible:ring-2 focus-visible:ring-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-xl"
                   aria-label="Describe your symptoms or ask a medical inquiry"
                   aria-describedby="chat-input-instruction"
                   disabled={isLoading}
@@ -746,7 +819,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                         className={`absolute right-2.5 top-2.5 h-8 w-8 rounded-lg transition-all ${
                           isListening
                             ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                            : "text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                            : "text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700"
                         }`}
                         aria-label={isListening ? "Stop voice dictation" : "Dictate symptoms with voice"}
                       >
@@ -788,12 +861,12 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
       {/* Sidebar: Session Symptom Timeline, Active Specialist Bio, Emergency Check (4 columns) */}
       <div className="lg:col-span-4 space-y-4">
         {/* Attending Specialist Card */}
-        <Card className="border-blue-100 shadow-sm bg-gradient-to-br from-white to-blue-50/40">
+        <Card className="border-blue-100 dark:border-slate-800 shadow-sm bg-gradient-to-br from-white to-blue-50/40 dark:from-slate-900 dark:to-slate-900/80">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Stethoscope className="w-4 h-4 text-blue-600" />
-                <CardTitle className="text-sm font-bold text-slate-900">
+                <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">
                   Attending Specialist
                 </CardTitle>
               </div>
@@ -811,19 +884,19 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                 referrerPolicy="no-referrer"
               />
               <div>
-                <div className="font-bold text-slate-900">{selectedAgent.name}</div>
-                <div className="text-xs font-semibold text-blue-600">{selectedAgent.specialty}</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">AI Clinical Intelligence</div>
+                <div className="font-bold text-slate-900 dark:text-white">{selectedAgent.name}</div>
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">{selectedAgent.specialty}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">AI Clinical Intelligence</div>
               </div>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200/80">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800/80 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700">
               {selectedAgent.description}
             </p>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsAgentDrawerOpen(true)}
-              className="w-full text-xs font-semibold text-blue-700 border-blue-200 hover:bg-blue-100/50 h-8"
+              className="w-full text-xs font-semibold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-slate-700 hover:bg-blue-100/50 dark:hover:bg-slate-800 h-8"
             >
               Change Doctor ({allAgents.length} Available)
             </Button>
@@ -831,26 +904,26 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
         </Card>
 
         {/* Tracked Symptoms History Card */}
-        <Card className="border-slate-200/90 shadow-sm">
+        <Card className="border-slate-200/90 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
           <CardHeader className="pb-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <CardTitle className="text-sm font-bold text-slate-900">
+                <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">
                   Symptom Log History
                 </CardTitle>
               </div>
-              <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 font-semibold">
+              <Badge variant="secondary" className="text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold">
                 {symptomsHistory.length} Recorded
               </Badge>
             </div>
-            <CardDescription className="text-xs text-slate-500">
+            <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
               Chronological log of reported symptoms in this session
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-1">
             {symptomsHistory.length === 0 ? (
-              <div className="p-4 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 text-slate-500 text-xs">
+              <div className="p-4 text-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 text-xs">
                 <Info className="w-4 h-4 mx-auto mb-1.5 text-slate-400" />
                 No symptoms submitted yet. Dictate or type symptoms to begin tracking.
               </div>
@@ -860,13 +933,13 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                   {symptomsHistory.map((symptom, idx) => (
                     <li
                       key={symptom.id}
-                      className="p-2.5 bg-slate-50 hover:bg-blue-50/60 rounded-xl border border-slate-200 text-xs text-slate-700 transition-colors"
+                      className="p-2.5 bg-slate-50 dark:bg-slate-800/70 hover:bg-blue-50/60 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 transition-colors"
                     >
-                      <div className="flex items-center justify-between font-semibold text-slate-800 mb-0.5">
-                        <span className="text-[11px] text-blue-600 font-bold">Log #{idx + 1}</span>
+                      <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200 mb-0.5">
+                        <span className="text-[11px] text-blue-600 dark:text-blue-400 font-bold">Log #{idx + 1}</span>
                         <span className="text-[10px] text-slate-400 font-mono">{symptom.timestamp}</span>
                       </div>
-                      <p className="line-clamp-2 text-slate-600">{symptom.text}</p>
+                      <p className="line-clamp-2 text-slate-600 dark:text-slate-300">{symptom.text}</p>
                     </li>
                   ))}
                 </ul>
@@ -879,7 +952,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => exportConsultation("txt")}
-                className="flex-1 text-xs text-slate-600 hover:text-blue-700 h-8"
+                className="flex-1 text-xs text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 h-8 border-slate-200 dark:border-slate-700"
               >
                 <Download className="w-3.5 h-3.5 mr-1" />
                 Export
@@ -888,7 +961,7 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsClearConfirmOpen(true)}
-                className="text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 h-8"
+                className="text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 h-8"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
@@ -897,16 +970,16 @@ export const MedicalChatInterface: React.FC<MedicalChatInterfaceProps> = ({
         </Card>
 
         {/* Emergency Triage Rule Banner */}
-        <Card className="border-red-200 bg-red-50/50 shadow-xs">
+        <Card className="border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/30 shadow-xs">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold flex items-center gap-1.5 text-red-900">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <CardTitle className="text-xs font-bold flex items-center gap-1.5 text-red-900 dark:text-red-300">
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
               Critical Emergency Red Flags
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-xs text-red-950/80 space-y-1.5 leading-relaxed">
-            <p className="font-semibold text-red-900">Immediate 911 Call Triggers:</p>
-            <ul className="list-disc list-inside space-y-1 text-slate-700 pl-0.5">
+          <CardContent className="text-xs text-red-950/80 dark:text-red-200/80 space-y-1.5 leading-relaxed">
+            <p className="font-semibold text-red-900 dark:text-red-300">Immediate 911 Call Triggers:</p>
+            <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300 pl-0.5">
               <li>Crushing central chest pain / radiating pressure</li>
               <li>Acute shortness of breath or blue lips</li>
               <li>Sudden facial drooping, arm weakness, or slurred speech</li>

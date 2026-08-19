@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   MessageSquare, Users, Layers, Activity, 
   BookOpen, ClipboardList, ShieldAlert, Sparkles, HeartPulse, 
-  PhoneCall, Stethoscope
+  PhoneCall, Stethoscope, BarChart3
 } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
@@ -12,6 +12,7 @@ import { MedicalChatInterface } from "@/components/MedicalChatInterface";
 import { AgentsDirectory } from "@/components/AgentsDirectory";
 import { AnatomyMapper } from "@/components/AnatomyMapper";
 import { BiomarkersSimulator } from "@/components/BiomarkersSimulator";
+import { HealthMetricsDashboard } from "@/components/HealthMetricsDashboard";
 import { ClinicalProtocols } from "@/components/ClinicalProtocols";
 import { ConsultationInterface } from "@/components/ConsultationInterface";
 import { Agent, agents } from "@/lib/agents";
@@ -52,8 +53,8 @@ const Index: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
-      {/* Top Navbar */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors">
+      {/* Top Navbar with Theme Toggle */}
       <Navbar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -94,26 +95,26 @@ const Index: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Sub-Header / Tab Navigation Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                   Clinical Triage & Specialist Intelligence Hub
                 </h2>
-                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-xs font-bold py-0.5">
+                <Badge className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs font-bold py-0.5">
                   Live
                 </Badge>
               </div>
-              <p className="text-slate-600 text-xs sm:text-sm mt-0.5">
+              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-0.5">
                 Multi-agent medical consultation, evidence-based triage stratification, and biomarker risk analytics.
               </p>
             </div>
 
             {/* Navigation Tabs Pill Bar */}
-            <TabsList className="bg-slate-200/80 p-1 rounded-xl border border-slate-300/80 flex flex-wrap h-auto gap-1">
+            <TabsList className="bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-300/80 dark:border-slate-700 flex flex-wrap h-auto gap-1">
               <TabsTrigger
                 value="chat"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>Triage Chat</span>
@@ -121,15 +122,23 @@ const Index: React.FC = () => {
 
               <TabsTrigger
                 value="agents"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
               >
                 <Users className="w-3.5 h-3.5" />
                 <span>17 Specialists</span>
               </TabsTrigger>
 
               <TabsTrigger
+                value="metrics"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                <span>Health Metrics</span>
+              </TabsTrigger>
+
+              <TabsTrigger
                 value="anatomy"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>Anatomy Mapper</span>
@@ -137,7 +146,7 @@ const Index: React.FC = () => {
 
               <TabsTrigger
                 value="biomarkers"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
               >
                 <Activity className="w-3.5 h-3.5" />
                 <span>Vitals & NEWS2</span>
@@ -145,7 +154,7 @@ const Index: React.FC = () => {
 
               <TabsTrigger
                 value="protocols"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Protocols</span>
@@ -153,7 +162,7 @@ const Index: React.FC = () => {
 
               <TabsTrigger
                 value="intake"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-xs text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
               >
                 <ClipboardList className="w-3.5 h-3.5" />
                 <span>Intake Form</span>
@@ -194,7 +203,22 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 3: Anatomy Mapper */}
+          {/* TAB 3: Health Metrics Dashboard (Recharts Visualizations) */}
+          <TabsContent value="metrics" className="mt-0 focus-visible:outline-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="metrics-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <HealthMetricsDashboard />
+              </motion.div>
+            </AnimatePresence>
+          </TabsContent>
+
+          {/* TAB 4: Anatomy Mapper */}
           <TabsContent value="anatomy" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -209,7 +233,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 4: Biomarkers & Vitals Simulator (NEWS2) */}
+          {/* TAB 5: Biomarkers & Vitals Simulator (NEWS2) */}
           <TabsContent value="biomarkers" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -224,7 +248,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 5: Clinical Protocols & Decision Trees */}
+          {/* TAB 6: Clinical Protocols & Decision Trees */}
           <TabsContent value="protocols" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -239,7 +263,7 @@ const Index: React.FC = () => {
             </AnimatePresence>
           </TabsContent>
 
-          {/* TAB 6: Structured Intake Form */}
+          {/* TAB 7: Structured Intake Form */}
           <TabsContent value="intake" className="mt-0 focus-visible:outline-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -257,39 +281,42 @@ const Index: React.FC = () => {
       </main>
 
       {/* Comprehensive Medical Footer */}
-      <footer className="border-t border-slate-200 bg-white py-8 mt-16 text-slate-600 text-xs">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-8 mt-16 text-slate-600 dark:text-slate-400 text-xs transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
                 <Stethoscope className="w-4 h-4" />
               </div>
-              <span className="font-extrabold text-base text-slate-900">
-                Yurrheeler<span className="text-blue-600">Med</span> Clinical AI
+              <span className="font-extrabold text-base text-slate-900 dark:text-white">
+                Yurrheeler<span className="text-blue-600 dark:text-blue-400">Med</span> Clinical AI
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
-              <button onClick={() => setActiveTab("chat")} className="hover:text-blue-600">
+            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <button onClick={() => setActiveTab("chat")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 AI Triage
               </button>
-              <button onClick={() => setActiveTab("agents")} className="hover:text-blue-600">
+              <button onClick={() => setActiveTab("agents")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 17 Specialist Doctors
               </button>
-              <button onClick={() => setActiveTab("anatomy")} className="hover:text-blue-600">
+              <button onClick={() => setActiveTab("metrics")} className="hover:text-blue-600 dark:hover:text-blue-400">
+                Health Metrics
+              </button>
+              <button onClick={() => setActiveTab("anatomy")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 Anatomy Mapper
               </button>
-              <button onClick={() => setActiveTab("biomarkers")} className="hover:text-blue-600">
+              <button onClick={() => setActiveTab("biomarkers")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 Vitals & NEWS2
               </button>
-              <button onClick={() => setActiveTab("protocols")} className="hover:text-blue-600">
+              <button onClick={() => setActiveTab("protocols")} className="hover:text-blue-600 dark:hover:text-blue-400">
                 Clinical Protocols
               </button>
             </div>
           </div>
 
-          <div className="space-y-2 text-slate-500 leading-relaxed text-[11px]">
-            <p className="font-bold text-slate-700">
+          <div className="space-y-2 text-slate-500 dark:text-slate-400 leading-relaxed text-[11px]">
+            <p className="font-bold text-slate-700 dark:text-slate-300">
               IMPORTANT CLINICAL DISCLAIMER & SAFETY NOTICE:
             </p>
             <p>
@@ -300,9 +327,9 @@ const Index: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
             <div>&copy; {new Date().getFullYear()} Yurrheeler Med Advisor. All clinical triage rights reserved.</div>
-            <div className="flex items-center gap-1.5 font-medium text-emerald-600">
+            <div className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
               <HeartPulse className="w-3.5 h-3.5" />
               <span>Gemini Clinical Triage Engine Online</span>
             </div>
