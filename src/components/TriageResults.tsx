@@ -8,12 +8,20 @@ import {
   TrendingUp, FileText, Phone, RefreshCw 
 } from "lucide-react";
 
+interface PatientVitals {
+  temperature_c: number;
+  heart_rate_bpm: number;
+  bp_systolic?: number;
+  bp_diastolic?: number;
+  oxygen_saturation?: number;
+}
+
 interface TriageResultsProps {
   patientData: {
     age: number;
     gender: string;
     symptoms: string[];
-    vitals: any;
+    vitals: PatientVitals;
   };
   triageResult: {
     urgency_level: string;

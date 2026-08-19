@@ -10,8 +10,23 @@ import { Separator } from "@/components/ui/separator";
 import { AlertCircle, Thermometer, Heart, Activity } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+export interface PatientVitals {
+  temperature_c: number;
+  heart_rate_bpm: number;
+  bp_systolic?: number;
+  bp_diastolic?: number;
+  oxygen_saturation?: number;
+}
+
+export interface PatientDataPayload {
+  age: number;
+  gender: string;
+  symptoms: string[];
+  vitals: PatientVitals;
+}
+
 interface PatientIntakeProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: PatientDataPayload) => void;
 }
 
 export const PatientIntake = ({ onSubmit }: PatientIntakeProps) => {
