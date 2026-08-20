@@ -27,61 +27,61 @@ export const IntelligenceStatus: React.FC<{ compact?: boolean }> = ({ compact = 
   }
 
   return (
-    <div className="w-full bg-[#0d1117] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
+    <div className="w-full bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-md dark:shadow-xl relative overflow-hidden transition-colors">
       {/* Background subtle radial glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Activity className="w-4 h-4 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-semibold">
+              <span className="text-xs font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-semibold">
                 Clinical Intelligence Status
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">
                 ACTIVE
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-sans">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-sans">
               Continuous neural synthesis & multidisciplinary consensus pipeline
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-mono text-slate-400">
-            System Latency: <span className="text-emerald-400 font-semibold">42ms</span>
+          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+            System Latency: <span className="text-emerald-600 dark:text-emerald-400 font-semibold">42ms</span>
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {/* Context Status */}
-        <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between">
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Patient Context
             </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
           </div>
-          <span className="text-sm font-semibold text-white">Synchronized</span>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">Synchronized</span>
           <span className="text-[10px] text-slate-500 font-mono mt-0.5">
             Live EHR & Wearable Bus
           </span>
         </div>
 
         {/* Specialists Status */}
-        <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between">
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
               AI Specialists
             </span>
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-teal-500 dark:bg-cyan-400 animate-pulse" />
           </div>
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
             {activeAgents.length > 0 ? `${activeAgents.length} Active` : `${agents.length} Standby`}
           </span>
           <span className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -90,14 +90,14 @@ export const IntelligenceStatus: React.FC<{ compact?: boolean }> = ({ compact = 
         </div>
 
         {/* Evidence Layer */}
-        <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between">
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Evidence Layer
             </span>
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" />
           </div>
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
             {evidence.length > 0 ? `${evidence.length} Grounded Nodes` : "NICE / AHA Active"}
           </span>
           <span className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -106,14 +106,14 @@ export const IntelligenceStatus: React.FC<{ compact?: boolean }> = ({ compact = 
         </div>
 
         {/* Spatial Target */}
-        <div className="p-3 rounded-xl bg-black/40 border border-white/5 flex flex-col justify-between">
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Spatial Target
             </span>
-            <span className="w-2 h-2 rounded-full bg-teal-400" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-teal-400" />
           </div>
-          <span className="text-sm font-semibold text-white capitalize">
+          <span className="text-sm font-semibold text-slate-900 dark:text-white capitalize">
             {selectedRegion ? selectedRegion.replace("-", " ") : "Whole Physiology"}
           </span>
           <span className="text-[10px] text-slate-500 font-mono mt-0.5">

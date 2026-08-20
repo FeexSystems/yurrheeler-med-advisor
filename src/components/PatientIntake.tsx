@@ -252,7 +252,7 @@ export const PatientIntake = ({ onSubmit }: PatientIntakeProps) => {
       <div className="flex justify-center">
         <Button 
           type="submit" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
         >
           Analyze & Get Recommendations
         </Button>

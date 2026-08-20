@@ -96,7 +96,7 @@ export const ThresholdConfiguration: React.FC = () => {
             Reset Defaults
           </Button>
           <DialogTrigger asChild>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6">
+            <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-6">
               Save Configuration
             </Button>
           </DialogTrigger>

@@ -72,7 +72,7 @@ export const TriageResults = ({ patientData, triageResult, onNewConsultation }: 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <FileText className="w-5 h-5 text-blue-600" />
+              <FileText className="w-5 h-5 text-emerald-600" />
               <span>Assessment Summary</span>
             </CardTitle>
           </CardHeader>
@@ -176,13 +176,13 @@ export const TriageResults = ({ patientData, triageResult, onNewConsultation }: 
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg text-blue-700">Follow-up Recommendations</CardTitle>
+            <CardTitle className="text-lg text-emerald-700">Follow-up Recommendations</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
               {triageResult.follow_up_recommendations.map((recommendation, index) => (
                 <li key={index} className="flex items-start space-x-2">
-                  <Clock className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Clock className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-700">{recommendation}</span>
                 </li>
               ))}

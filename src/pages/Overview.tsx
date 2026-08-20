@@ -46,18 +46,18 @@ export const Overview: React.FC<OverviewProps> = ({
   return (
     <div className="w-full flex flex-col gap-8">
       {/* 1. WELCOME & INTELLIGENCE READY BANNER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#0d131c] via-[#0b1017] to-[#07090e] border border-white/10 p-6 md:p-8 rounded-3xl relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gradient-to-r dark:from-[#0d131c] dark:via-[#0b1017] dark:to-[#07090e] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl relative overflow-hidden shadow-md dark:shadow-2xl transition-colors">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono uppercase tracking-wider mb-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-mono uppercase tracking-wider mb-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             Clinical Context Ready
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             {getGreeting()}, {userName}.
           </h1>
-          <p className="text-slate-400 text-sm md:text-base mt-1.5 max-w-xl font-light leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base mt-1.5 max-w-xl font-normal dark:font-light leading-relaxed">
             Your physiological baseline, active telemetry, and 17 specialized AI clinical perspectives are synchronized.
           </p>
         </div>
@@ -65,7 +65,7 @@ export const Overview: React.FC<OverviewProps> = ({
         <div className="flex items-center gap-3 relative z-10 shrink-0">
           <Button
             onClick={() => onNavigateTab && onNavigateTab("chat")}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs h-11 px-5 rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-11 px-5 rounded-xl flex items-center gap-2 shadow-md cursor-pointer"
           >
             <MessageSquare className="w-4 h-4" />
             <span>Consult Yurrheeler</span>
@@ -75,9 +75,9 @@ export const Overview: React.FC<OverviewProps> = ({
           <Link to="/clinical-space">
             <Button
               variant="outline"
-              className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-medium text-xs h-11 px-4 rounded-xl flex items-center gap-2 cursor-pointer"
+              className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white font-medium text-xs h-11 px-4 rounded-xl flex items-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-cyan-400" />
               <span>3D Clinical Space</span>
             </Button>
           </Link>
@@ -99,29 +99,29 @@ export const Overview: React.FC<OverviewProps> = ({
           <IntelligenceActivity />
 
           {/* Spatial World Preview Card */}
-          <div className="bg-[#0f131a] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
-            <div className="flex items-start justify-between border-b border-white/10 pb-3 mb-4">
+          <div className="bg-white dark:bg-[#0f131a] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-md dark:shadow-xl relative overflow-hidden flex flex-col justify-between transition-colors">
+            <div className="flex items-start justify-between border-b border-slate-100 dark:border-white/10 pb-3 mb-4">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-cyan-400">
                   Spatial Anatomy
                 </span>
-                <h3 className="text-sm font-bold text-white mt-0.5">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
                   Dynamic 3D Physiological World
                 </h3>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-cyan-500/10 border border-emerald-200 dark:border-cyan-500/20 flex items-center justify-center text-emerald-600 dark:text-cyan-400">
                 <Layers className="w-4 h-4" />
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 font-light leading-relaxed mb-4">
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-normal dark:font-light leading-relaxed mb-4">
               Inspect anatomical structures, active agent vectors, and real-time evidence links projected in three-dimensional clinical space.
             </p>
 
             <Link to="/clinical-space">
               <Button
                 variant="outline"
-                className="w-full bg-cyan-950/20 border-cyan-500/30 hover:bg-cyan-950/40 text-cyan-300 font-semibold text-xs h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-emerald-50 dark:bg-cyan-950/20 border-emerald-200 dark:border-cyan-500/30 hover:bg-emerald-100 dark:hover:bg-cyan-950/40 text-emerald-800 dark:text-cyan-300 font-semibold text-xs h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Launch 3D Spatial Environment</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
@@ -132,17 +132,17 @@ export const Overview: React.FC<OverviewProps> = ({
       </div>
 
       {/* 4. ACTIVE SPECIALISTS PREVIEW STRIP */}
-      <div className="bg-[#0d1117] border border-white/10 rounded-3xl p-6 shadow-xl">
-        <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-5">
+      <div className="bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-md dark:shadow-xl transition-colors">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-5">
           <div className="flex items-center gap-2">
-            <Brain className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-bold text-white tracking-tight">
+            <Brain className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
               Specialist Intelligence Constellation
             </h3>
           </div>
           <button
             onClick={() => onNavigateTab && onNavigateTab("agents")}
-            className="text-xs text-emerald-400 hover:text-emerald-300 font-mono flex items-center gap-1 cursor-pointer"
+            className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-mono flex items-center gap-1 cursor-pointer"
           >
             <span>View all 17 specialists</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -154,11 +154,11 @@ export const Overview: React.FC<OverviewProps> = ({
             <div
               key={agent.id}
               onClick={() => onConsultAgent && onConsultAgent(agent)}
-              className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-emerald-500/40 hover:bg-[#121822] transition-all cursor-pointer group flex flex-col justify-between"
+              className="p-4 rounded-2xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 hover:border-emerald-500/40 hover:bg-emerald-50/50 dark:hover:bg-[#121822] transition-all cursor-pointer group flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-black/60 border border-slate-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
                     {agent.avatar_url ? (
                       <img
                         src={agent.avatar_url}
@@ -171,22 +171,22 @@ export const Overview: React.FC<OverviewProps> = ({
                     )}
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
                       {agent.name}
                     </h4>
-                    <span className="text-[10px] font-mono text-emerald-400">
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
                       {agent.specialty}
                     </span>
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                   {agent.description}
                 </p>
               </div>
 
-              <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500">
                 <span>OBSERVING</span>
-                <span className="text-emerald-400 group-hover:underline">Consult →</span>
+                <span className="text-emerald-600 dark:text-emerald-400 group-hover:underline">Consult →</span>
               </div>
             </div>
           ))}

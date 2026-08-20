@@ -74,8 +74,8 @@ export const ConsultationInterface = ({ onBack }: ConsultationInterfaceProps) =>
         <h1 className="text-2xl font-bold text-gray-800">Medical Consultation</h1>
       </div>
 
-      <Card className="shadow-lg border-blue-200">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
+      <Card className="shadow-lg border-emerald-200 dark:border-slate-800">
+        <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-t-lg">
           <CardTitle className="text-xl">
             {currentStep === 'intake' ? 'Patient Information & Assessment' : 'Consultation Results'}
           </CardTitle>

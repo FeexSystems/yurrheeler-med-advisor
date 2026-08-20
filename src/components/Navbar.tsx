@@ -95,15 +95,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center space-x-3 cursor-pointer group"
             onClick={() => handleNavClick("chat")}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
               <Stethoscope className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg text-slate-900 dark:text-white tracking-tight">
-                  Yurrheeler<span className="text-blue-600 dark:text-blue-400">Med</span>
+                  Yurrheeler<span className="text-emerald-600 dark:text-emerald-400">Med</span>
                 </span>
-                <Badge variant="outline" className="hidden sm:inline-flex text-[10px] uppercase tracking-wider font-bold py-0 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800">
+                <Badge variant="outline" className="hidden sm:inline-flex text-[10px] uppercase tracking-wider font-bold py-0 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800">
                   AI Clinical
                 </Badge>
               </div>
@@ -124,8 +124,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => handleNavClick(item.id)}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     isActive
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-800"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -134,8 +134,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span
                       className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
                         isActive
-                          ? "bg-blue-800 text-blue-100"
-                          : "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800"
+                          ? "bg-emerald-800 text-emerald-100"
+                          : "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800"
                       }`}
                     >
                       {item.badge}
@@ -152,19 +152,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenAgentDrawer}
-              className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/80 hover:bg-blue-50/70 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-left"
+              className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50/70 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all text-left"
               title="Click to switch specialist agent"
             >
               <img
                 src={activeAgent.avatar_url}
                 alt={activeAgent.name}
-                className="w-7 h-7 rounded-full object-cover border border-blue-300 dark:border-blue-500"
+                className="w-7 h-7 rounded-full object-cover border border-emerald-400 dark:border-emerald-500"
                 referrerPolicy="no-referrer"
               />
               <div className="text-[11px] leading-tight">
                 <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                   <span>{activeAgent.name}</span>
-                  <Sparkles className="w-3 h-3 text-blue-500" />
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
                 </div>
                 <div className="text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-[80px]">
                   {activeAgent.specialty}
@@ -188,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                      <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
                         {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
                       </div>
                     )}
@@ -215,11 +215,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleNavClick("records")} className="text-xs cursor-pointer">
-                    <FileText className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                    <FileText className="w-3.5 h-3.5 mr-2 text-emerald-600" />
                     <span>My Triage Records</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleNavClick("chat")} className="text-xs cursor-pointer">
-                    <MessageSquare className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                    <MessageSquare className="w-3.5 h-3.5 mr-2 text-emerald-600" />
                     <span>Active Consultation</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -235,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 size="sm"
                 onClick={handleLogin}
                 disabled={authLoading}
-                className="text-xs font-semibold h-9 rounded-xl border-blue-200 dark:border-slate-700 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
+                className="text-xs font-semibold h-9 rounded-xl border-emerald-200 dark:border-slate-700 bg-emerald-50/50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Sign In</span>

@@ -76,7 +76,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
         );
       case "SEMI-URGENT":
         return (
-          <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-1 px-3 flex items-center gap-1.5 shadow-sm">
+          <Badge className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-1 px-3 flex items-center gap-1.5 shadow-sm">
             <Stethoscope className="w-3.5 h-3.5" />
             <span>SEMI-URGENT (24-48h)</span>
           </Badge>
@@ -95,11 +95,11 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl">
         {/* Document Header */}
-        <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900">
+        <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-slate-50 dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <DialogTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
                   Clinical Triage Encounter Record
                 </DialogTitle>
@@ -117,7 +117,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
           {/* Metadata chips */}
           <div className="flex flex-wrap items-center gap-3 mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 font-medium">
             <div className="flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <User className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Specialist: <strong>{agentName}</strong> ({agentSpecialty})</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -186,7 +186,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({
           </span>
           <Button
             onClick={onClose}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-5 rounded-xl shadow-xs"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 px-5 rounded-xl shadow-xs"
           >
             Done
           </Button>
