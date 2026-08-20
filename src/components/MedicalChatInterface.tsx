@@ -57,11 +57,11 @@ const AIReportReadingCard: React.FC<{
 
   // Estimate reading time in minutes
   const readingTimeMin = useMemo(() => {
-    const words = text.trim().split(/\s+/).length;
+    const words = (text || "").trim().split(/\s+/).filter(Boolean).length;
     return Math.max(1, Math.ceil(words / 180));
   }, [text]);
 
-  const isLongReport = text.length > 350;
+  const isLongReport = (text || "").length > 350;
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
