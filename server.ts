@@ -3,6 +3,10 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
+import { streamText } from "ai";
+import { google } from "@ai-sdk/google";
+
+
 const app = express();
 const PORT = 3000;
 
@@ -105,6 +109,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
     const systemPrompt = buildSystemInstruction(agentName, agentSpecialty);
 
     if (ai) {
+      try {
       const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
 
       if (patientContext && (patientContext.age || patientContext.symptoms?.length || patientContext.vitals)) {
@@ -157,9 +162,13 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         model: "gemini-3.5-flash",
         groundingMetadata: response.candidates?.[0]?.groundingMetadata,
       });
+      } catch (aiError: unknown) {
+        console.warn("AI API Error, falling back to rule-based response:", (aiError as Error).message || aiError);
+        // Continue to fallback response below
+      }
     }
 
-    // Fallback if API key is not configured: intelligent clinical rule-based response
+    // Fallback if API key is not configured or rate limited: intelligent clinical rule-based response
     const lower = message.toLowerCase();
     const isEmergency =
       lower.includes("chest pain") ||
@@ -235,7 +244,7 @@ ${
       urgencyBadge,
     });
   } catch (err: unknown) {
-    console.error("Error in /api/chat:", err);
+    console.warn("Error in /api/chat:", err);
     const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
     return res.status(500).json({ error: errorMessage });
   }
@@ -322,7 +331,8 @@ Structure the markdown document cleanly with these exact sections:
 *Clinical Disclaimer: This triage summary document is compiled from an AI-assisted specialist encounter for informational organization and personal health records. It does not replace comprehensive in-person medical evaluation by a licensed physician.*`;
 
     if (ai) {
-      const response = await ai.models.generateContent({
+      try {
+        const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
@@ -349,6 +359,10 @@ Structure the markdown document cleanly with these exact sections:
         agentSpecialty: specialty,
         generatedAt: new Date().toISOString(),
       });
+      } catch (aiError: unknown) {
+        console.warn("AI API Error during summary, falling back to rule-based generator:", (aiError as Error).message || aiError);
+        // Continue to fallback
+      }
     }
 
     // Fallback deterministic summary generator
@@ -397,13 +411,40 @@ Structure the markdown document cleanly with these exact sections:
       generatedAt: new Date().toISOString(),
     });
   } catch (err: unknown) {
-    console.error("Error in /api/generate-summary:", err);
+    console.warn("Error in /api/generate-summary:", err);
     const errorMessage = err instanceof Error ? err.message : "Summary generation error";
     return res.status(500).json({ error: errorMessage });
   }
 });
 
+
+// Vercel AI SDK Streaming Endpoint
+app.post("/api/ai-chat", async (req: Request, res: Response) => {
+  try {
+    const { messages } = req.body;
+    
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: "GEMINI_API_KEY is not set." });
+    }
+
+    const result = streamText({
+      model: google("gemini-3.5-flash"),
+      messages,
+      system: "You are the YurrheelerMed Clinical Intelligence Assistant, an AI designed for clinical triage guidance. Respond professionally and concisely. You DO NOT formulate definitive medical diagnoses or replace formal consultation.",
+    });
+
+    result.pipeDataStreamToResponse(res);
+  } catch (error: unknown) {
+    if ((error as Error).message?.includes("429") || (error as Error).message?.includes("quota")) {
+      return res.status(429).json({ error: "Gemini API quota exceeded. Please try again later or configure your own API key." });
+    }
+    console.warn("Error in /api/ai-chat:", error);
+    res.status(500).json({ error: "Failed to generate AI response" });
+  }
+});
+
 app.get("/api/health", (req, res) => {
+
   res.json({ status: "ok", service: "yurrheeler-med-advisor" });
 });
 

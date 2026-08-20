@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDocFromServer, serverTimestamp } from "firebase/firestore";
 import { auth, db, signInWithGoogle, logOut, handleFirestoreError, OperationType } from "@/lib/firebase";
 
 interface AuthContextType {
@@ -31,32 +31,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userDocPath = `users/${currentUser.uid}`;
         try {
           const userRef = doc(db, "users", currentUser.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
+          await setDoc(
+            userRef,
+            {
               userId: currentUser.uid,
               email: currentUser.email || "",
               displayName: currentUser.displayName || "Patient",
               photoURL: currentUser.photoURL || "",
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          } else {
-            await setDoc(
-              userRef,
-              {
-                email: currentUser.email || "",
-                displayName: currentUser.displayName || "Patient",
-                photoURL: currentUser.photoURL || "",
-                updatedAt: serverTimestamp(),
-              },
-              { merge: true }
-            );
-          }
+              lastLoginAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
         } catch (error) {
-          console.error("Failed to sync user profile with Firestore:", error);
-          // Non-blocking for auth state
+          if (error instanceof Error && error.message.includes("offline")) {
+             console.warn("Profile sync deferred: Client is offline");
+          } else {
+             console.error("Failed to sync user profile with Firestore:", error);
+          }
         }
       }
     });

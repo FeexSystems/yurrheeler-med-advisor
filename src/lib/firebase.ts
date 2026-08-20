@@ -29,8 +29,17 @@ import firebaseConfig from "../../firebase-applet-config.json";
 // Initialize Firebase App
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with custom databaseId if configured and long polling for AI Studio
-export const db = initializeFirestore(app, { experimentalForceLongPolling: true }, firebaseConfig.firestoreDatabaseId || undefined);
+// Initialize Firestore with custom databaseId
+let dbInstance;
+try {
+  dbInstance = initializeFirestore(app, { 
+    experimentalForceLongPolling: true
+  }, firebaseConfig.firestoreDatabaseId || undefined);
+} catch (e) {
+  // If already initialized during HMR
+  dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
+}
+export const db = dbInstance;
 
 // Initialize Auth
 export const auth = getAuth(app);
@@ -101,7 +110,7 @@ export async function testFirestoreConnection() {
 }
 
 // Trigger connection test safely
-testFirestoreConnection();
+// testFirestoreConnection();
 
 // Auth helper functions
 export async function signInWithGoogle(): Promise<User> {
