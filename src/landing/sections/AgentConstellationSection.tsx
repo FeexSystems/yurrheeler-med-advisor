@@ -44,49 +44,62 @@ export const AgentConstellationSection: React.FC = () => {
           </p>
         </div>
 
-        {/* 3D Agent Mesh Canvas */}
-        <div className="h-[440px] md:h-[500px] w-full bg-[#0b0e14] rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden mb-12">
-          {/* Spatial 3D Node Mesh */}
-          <ClinicalScene
-            cameraPosition={[0, 0.8, 4.2]}
-            fov={45}
-            enableOrbit={true}
-            particleColor="#10b981"
-            className="w-full h-full"
-          >
-            {agents.slice(0, 7).map((agent, idx) => {
-              const pos = agentPositions[idx] || [0, 0, 0];
-              const isSelected = agent.id === selectedAgentId;
-              const state: AgentNodeState = isSelected
-                ? "reasoning"
-                : idx % 2 === 0
-                ? "observing"
-                : "processing";
+        {/* 3D Human Anatomy Specialist Constellation Viewer */}
+        <div className="h-[440px] md:h-[500px] w-full bg-[#0b0e14] rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden mb-12 flex items-center justify-center p-6">
+          <div className="relative w-full max-w-2xl h-full flex items-center justify-center">
+            {/* 3D Human Anatomy Neural Synapse Background Render Image */}
+            <img
+              src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070&auto=format&fit=crop"
+              alt="3D Neural Anatomy Constellation"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover rounded-xl opacity-60 filter drop-shadow-[0_0_30px_rgba(16,185,129,0.2)]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e14] via-transparent to-[#0b0e14]/60 pointer-events-none" />
 
+            {/* Constellation Agent Nodes mapped across the anatomical canvas */}
+            {[
+              { id: "cardia", name: "Cardia", specialty: "Cardiology", top: "45%", left: "50%", color: "#ef4444" },
+              { id: "neura", name: "Neura", specialty: "Neurology", top: "18%", left: "48%", color: "#10b981" },
+              { id: "nephro", name: "Nephro", specialty: "Nephrology", top: "60%", left: "55%", color: "#10b981" },
+              { id: "orthop", name: "Orthop", specialty: "Orthopedics", top: "72%", left: "38%", color: "#f59e0b" },
+              { id: "pedia", name: "Pedia", specialty: "Pediatrics", top: "35%", left: "28%", color: "#10b981" },
+              { id: "derma", name: "Derma", specialty: "Dermatology", top: "38%", left: "70%", color: "#f43f5e" },
+              { id: "opthalm", name: "Opthalm", specialty: "Ophthalmology", top: "22%", left: "62%", color: "#10b981" },
+            ].map((node) => {
+              const isSelected = node.id === selectedAgentId;
               return (
-                <AgentNode
-                  key={agent.id}
-                  id={agent.id}
-                  name={agent.name}
-                  specialty={agent.specialty}
-                  state={state}
-                  position={pos}
-                  onClick={() => setSelectedAgentId(agent.id)}
-                  color={
-                    agent.badgeColor === "red"
-                      ? "#ef4444"
-                      : agent.badgeColor === "cyan"
-                      ? "#06b6d4"
-                      : agent.badgeColor === "amber"
-                      ? "#f59e0b"
-                      : agent.badgeColor === "rose"
-                      ? "#f43f5e"
-                      : "#10b981"
-                  }
-                />
+                <button
+                  key={node.id}
+                  type="button"
+                  onClick={() => setSelectedAgentId(node.id)}
+                  style={{ top: node.top, left: node.left }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 group z-20 cursor-pointer focus:outline-none"
+                >
+                  <div
+                    className={`relative flex items-center justify-center transition-all duration-300 ${
+                      isSelected
+                        ? "w-12 h-12 rounded-2xl bg-emerald-500 text-slate-950 shadow-[0_0_30px_#10b981] scale-110"
+                        : "w-10 h-10 rounded-2xl bg-black/80 border border-white/20 text-white hover:border-emerald-400 hover:scale-105"
+                    }`}
+                  >
+                    <Activity className={`w-5 h-5 ${isSelected ? "text-slate-950" : "text-emerald-400"}`} />
+                    {isSelected && (
+                      <span className="absolute inset-0 rounded-2xl border-2 border-emerald-300 animate-ping pointer-events-none opacity-60" />
+                    )}
+                  </div>
+                  <div
+                    className={`absolute left-1/2 -translate-x-1/2 top-12 whitespace-nowrap text-[10px] font-mono px-2 py-0.5 rounded backdrop-blur-md border transition-all ${
+                      isSelected
+                        ? "bg-emerald-950/90 border-emerald-400 text-emerald-300 opacity-100 font-bold"
+                        : "bg-black/70 border-white/10 text-slate-300 opacity-80 group-hover:opacity-100"
+                    }`}
+                  >
+                    {node.name}
+                  </div>
+                </button>
               );
             })}
-          </ClinicalScene>
+          </div>
 
           {/* Quick Select Bottom Bar */}
           <div className="absolute bottom-4 inset-x-4 z-20 flex items-center justify-center gap-2 overflow-x-auto py-2">

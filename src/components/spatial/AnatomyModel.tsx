@@ -74,30 +74,33 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
     let color = baseColor;
     let emissive = "#000000";
     let emissiveIntensity = 0;
-    let opacity = 0.7;
+    let opacity = 0.85;
 
     if (themeMode === "classic-vitruvian") {
-      color = isSelected ? "#eab308" : isHovered ? "#fde047" : "#d4af37";
-      opacity = isSelected ? 0.95 : isHovered ? 0.85 : 0.65;
-      if (isSelected || isHovered) {
-        emissive = "#d4af37";
-        emissiveIntensity = isSelected ? 0.6 : 0.3;
+      color = isSelected ? "#e2d4b7" : isHovered ? "#dfd3c3" : "#d8cbbe";
+      opacity = isSelected ? 0.95 : isHovered ? 0.9 : 0.8;
+      if (isSelected) {
+        emissive = "#bca37f";
+        emissiveIntensity = 0.25;
+      } else if (isHovered) {
+        emissive = "#a38c6d";
+        emissiveIntensity = 0.15;
       }
     } else if (themeMode === "classic-clinical") {
-      color = isSelected ? "#10b981" : isHovered ? "#38bdf8" : baseColor;
+      color = isSelected ? "#e0f2fe" : isHovered ? "#f1f5f9" : baseColor;
       if (isSelected) {
-        emissive = "#10b981";
-        emissiveIntensity = 0.7;
+        emissive = "#0284c7";
+        emissiveIntensity = 0.3;
         opacity = 0.95;
       } else if (isHovered) {
-        emissive = "#38bdf8";
-        emissiveIntensity = 0.4;
+        emissive = "#64748b";
+        emissiveIntensity = 0.15;
         opacity = 0.85;
       }
     } else {
-      // Engraving mode: sepia & bronze
-      color = isSelected ? "#d97706" : isHovered ? "#f59e0b" : "#78716c";
-      opacity = isSelected ? 0.9 : 0.6;
+      // Engraving mode: minimalist marble & sepia bronze
+      color = isSelected ? "#d4af37" : isHovered ? "#e2e8f0" : "#a8a29e";
+      opacity = isSelected ? 0.9 : 0.7;
     }
 
     return (
@@ -107,12 +110,14 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
         emissiveIntensity={emissiveIntensity}
         transparent
         opacity={opacity}
-        roughness={0.35}
-        metalness={themeMode === "classic-vitruvian" ? 0.65 : 0.25}
-        clearcoat={0.4}
+        roughness={0.4}
+        metalness={0.15}
+        clearcoat={0.3}
+        clearcoatRoughness={0.2}
       />
     );
   };
+
 
   const handlePointerDown = (e: React.PointerEvent<THREE.Mesh> | unknown, id: AnatomyRegionId) => {
     (e as React.PointerEvent)?.stopPropagation?.();
@@ -153,11 +158,11 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <sphereGeometry args={[0.29, 32, 32]} />
-          {getRegionMaterial("brain", isClassic ? "#d4af37" : "#64748b")}
+          {getRegionMaterial("brain", isClassic ? "#d8cbbe" : "#64748b")}
         </mesh>
         {(selectedRegion === "brain" || hoveredRegion === "brain") && (
           <Html position={[0.48, 0, 0]} center className="pointer-events-none select-none">
-            <div className="bg-[#120f09]/95 border border-[#d4af37]/60 text-[#fef08a] text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
+            <div className="bg-[#120f09]/95 border border-[#d4af37]/40 text-[#fef08a] text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
               <span className="font-semibold tracking-wider uppercase text-[11px] text-[#facc15]">
                 Cerebrum & Encephalon
               </span>
@@ -173,11 +178,11 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
       <mesh position={[0, 0.95, 0]}>
         <cylinderGeometry args={[0.46, 0.36, 1.25, 24, 6, true]} />
         <meshPhysicalMaterial
-          color={isClassic ? "#c5a059" : "#1e293b"}
+          color={isClassic ? "#c5a059" : "#334155"}
           transparent
-          opacity={isClassic ? 0.3 : 0.2}
-          roughness={0.7}
-          metalness={isClassic ? 0.5 : 0.1}
+          opacity={isClassic ? 0.2 : 0.15}
+          roughness={0.8}
+          metalness={isClassic ? 0.3 : 0.1}
           wireframe
         />
       </mesh>
@@ -191,11 +196,11 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <octahedronGeometry args={[0.18, 2]} />
-          {getRegionMaterial("heart", isClassic ? "#dc2626" : "#ef4444")}
+          {getRegionMaterial("heart", isClassic ? "#b91c1c" : "#e11d48")}
         </mesh>
         {(selectedRegion === "heart" || hoveredRegion === "heart") && (
           <Html position={[0.45, 0, 0]} center className="pointer-events-none select-none">
-            <div className="bg-[#180808]/95 border border-rose-500/60 text-rose-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
+            <div className="bg-[#180808]/95 border border-rose-500/40 text-rose-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
               <span className="font-semibold tracking-wider uppercase text-[11px] text-rose-300">
                 Cor Humanum
               </span>
@@ -217,7 +222,7 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <capsuleGeometry args={[0.12, 0.34, 16, 16]} />
-          {getRegionMaterial("lungs", isClassic ? "#0284c7" : "#0284c7")}
+          {getRegionMaterial("lungs", isClassic ? "#38bdf8" : "#0284c7")}
         </mesh>
       </group>
       {/* Right Lung */}
@@ -229,11 +234,11 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <capsuleGeometry args={[0.12, 0.31, 16, 16]} />
-          {getRegionMaterial("lungs", isClassic ? "#0284c7" : "#0284c7")}
+          {getRegionMaterial("lungs", isClassic ? "#38bdf8" : "#0284c7")}
         </mesh>
         {(selectedRegion === "lungs" || hoveredRegion === "lungs") && (
           <Html position={[0.45, 0, 0]} center className="pointer-events-none select-none">
-            <div className="bg-[#08131d]/95 border border-cyan-500/60 text-cyan-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
+            <div className="bg-[#08131d]/95 border border-cyan-500/40 text-cyan-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
               <span className="font-semibold tracking-wider uppercase text-[11px] text-cyan-300">
                 Pulmones Sinister & Dexter
               </span>
@@ -253,11 +258,11 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <boxGeometry args={[0.26, 0.16, 0.2]} />
-          {getRegionMaterial("liver", isClassic ? "#b45309" : "#b45309")}
+          {getRegionMaterial("liver", isClassic ? "#9a3412" : "#b45309")}
         </mesh>
         {(selectedRegion === "liver" || hoveredRegion === "liver") && (
           <Html position={[0.42, 0, 0]} center className="pointer-events-none select-none">
-            <div className="bg-[#191008]/95 border border-amber-500/60 text-amber-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
+            <div className="bg-[#191008]/95 border border-amber-500/40 text-amber-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
               <span className="font-semibold tracking-wider uppercase text-[11px] text-amber-300">
                 Hepar
               </span>
@@ -277,7 +282,7 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <sphereGeometry args={[0.09, 16, 16]} />
-          {getRegionMaterial("kidney-left", isClassic ? "#0d9488" : "#0d9488")}
+          {getRegionMaterial("kidney-left", isClassic ? "#0f766e" : "#0d9488")}
         </mesh>
       </group>
       <group position={[0.18, 0.46, -0.1]}>
@@ -287,11 +292,11 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
           onPointerOut={() => onHoverRegion?.(null)}
         >
           <sphereGeometry args={[0.09, 16, 16]} />
-          {getRegionMaterial("kidney-right", isClassic ? "#0d9488" : "#0d9488")}
+          {getRegionMaterial("kidney-right", isClassic ? "#0f766e" : "#0d9488")}
         </mesh>
         {(selectedRegion === "kidney-left" || selectedRegion === "kidney-right" || hoveredRegion === "kidney-left" || hoveredRegion === "kidney-right") && (
           <Html position={[0.38, 0, 0]} center className="pointer-events-none select-none">
-            <div className="bg-[#081816]/95 border border-teal-500/60 text-teal-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
+            <div className="bg-[#081816]/95 border border-teal-500/40 text-teal-200 text-xs px-3 py-1.5 rounded-sm backdrop-blur-md whitespace-nowrap shadow-2xl flex flex-col font-serif">
               <span className="font-semibold tracking-wider uppercase text-[11px] text-teal-300">
                 Renes (Sinister et Dexter)
               </span>
@@ -305,13 +310,14 @@ export const AnatomyModel: React.FC<AnatomyModelProps> = ({
 
       {/* 7. SPINAL COLUMN / COLUMNA VERTEBRALIS */}
       <mesh position={[0, 0.85, -0.18]}>
-        <cylinderGeometry args={[0.04, 0.04, 1.6, 16]} />
+        <cylinderGeometry args={[0.035, 0.035, 1.6, 16]} />
         <meshStandardMaterial
-          color={isClassic ? "#c5a059" : "#475569"}
-          roughness={0.3}
-          metalness={isClassic ? 0.7 : 0.6}
+          color={isClassic ? "#c5a059" : "#64748b"}
+          roughness={0.4}
+          metalness={isClassic ? 0.5 : 0.3}
         />
       </mesh>
+
     </group>
   );
 };

@@ -1,111 +1,87 @@
-import React, { Suspense, useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
-import { BodyModel } from '../components/BodyModel';
-import { AgentAvatar3D } from '../components/AgentAvatar3D';
-import { EvidenceNode3D } from '../components/EvidenceNode';
-import { AmbientField, SignalBeam } from '../components/Effects';
+import React from 'react';
 import { useClinicalStore } from '@/clinical/store';
 import { getAgentById } from '@/lib/agents';
 
 export const ClinicalEnvironment: React.FC = () => {
   const selectedRegion = useClinicalStore((state) => state.selectedRegion);
+  const setSelectedRegion = useClinicalStore((state) => state.setSelectedRegion);
   const activeAgents = useClinicalStore((state) => state.activeAgents);
-  const agentStates = useClinicalStore((state) => state.agentStates);
   const evidence = useClinicalStore((state) => state.evidence);
 
-  // Calculate positions for active agents in a semicircle around the patient
-  const agentPositions = useMemo(() => {
-    const positions: Record<string, [number, number, number]> = {};
-    const count = activeAgents.length;
-    const radius = 1.5;
-    
-    activeAgents.forEach((agentId, index) => {
-      // If only 1, place slightly to the right. If more, distribute in arc.
-      const angle = count === 1 ? Math.PI / 6 : (Math.PI / 2) * (index / Math.max(1, count - 1)) - Math.PI / 4;
-      positions[agentId] = [Math.sin(angle) * radius, 1.2, Math.cos(angle) * radius];
-    });
-    
-    return positions;
-  }, [activeAgents]);
+  const organRegions = [
+    { id: "head", label: "Cranial & Neurological", top: "16%", left: "50%", agent: "neura" },
+    { id: "chest", label: "Cardiovascular & Pulmonary", top: "35%", left: "50%", agent: "cardia" },
+    { id: "abdomen", label: "Hepatic & Digestive", top: "50%", left: "50%", agent: "gastro" },
+    { id: "spine", label: "Musculoskeletal & Axis", top: "42%", left: "40%", agent: "orthop" },
+    { id: "pelvis", label: "Renal & Pelvic Matrix", top: "62%", left: "50%", agent: "nephro" },
+  ];
 
   return (
-    <div className="w-full h-full relative bg-clinical-bg transition-colors duration-500">
-      <Canvas
-        className="relative z-10"
-        camera={{ position: [0, 1.2, 3], fov: 45 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <ambientLight intensity={0.5} />
-        <spotLight position={[5, 5, 5]} angle={0.2} penumbra={1} intensity={1} castShadow />
-        <spotLight position={[-5, 5, -5]} angle={0.2} penumbra={1} intensity={0.5} />
-        
-        <Suspense fallback={null}>
-          <AmbientField />
-          <BodyModel selectedRegion={selectedRegion} />
-          
-          {/* Active Specialists */}
-          {activeAgents.map(agentId => {
+    <div className="w-full h-full relative bg-slate-950 flex items-center justify-center p-6 overflow-hidden">
+      {/* Background Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+
+      {/* 3D Human Anatomy Holographic Render Image */}
+      <div className="relative w-full max-w-lg h-full flex items-center justify-center">
+        <img
+          src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=2070&auto=format&fit=crop"
+          alt="3D Human Anatomy Clinical Space"
+          referrerPolicy="no-referrer"
+          className="w-full h-full max-h-[500px] object-contain filter brightness-105 contrast-120 drop-shadow-[0_0_35px_rgba(16,185,129,0.3)] transition-all duration-700"
+        />
+
+        {/* Anatomical Organ Target Pins */}
+        {organRegions.map((region) => {
+          const isSelected = selectedRegion === region.id;
+          return (
+            <button
+              key={region.id}
+              type="button"
+              onClick={() => setSelectedRegion(region.id)}
+              style={{ top: region.top, left: region.left }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 group z-20 cursor-pointer focus:outline-none"
+            >
+              <div
+                className={`flex items-center justify-center rounded-full transition-all duration-300 ${
+                  isSelected
+                    ? "w-8 h-8 bg-emerald-500 text-slate-950 shadow-[0_0_25px_#10b981] scale-125"
+                    : "w-6 h-6 bg-black/80 border border-emerald-500/60 text-emerald-400 hover:scale-110"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${isSelected ? "bg-slate-950" : "bg-emerald-400 animate-pulse"}`} />
+              </div>
+
+              {/* Tooltip Tag */}
+              <div
+                className={`absolute left-8 top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] font-mono px-2 py-0.5 rounded backdrop-blur-md border transition-all ${
+                  isSelected
+                    ? "bg-emerald-950/90 border-emerald-400 text-emerald-300 font-bold opacity-100"
+                    : "bg-black/80 border-white/10 text-slate-300 opacity-0 group-hover:opacity-100"
+                }`}
+              >
+                {region.label}
+              </div>
+            </button>
+          );
+        })}
+
+        {/* Active Agents Badge Orbit */}
+        <div className="absolute bottom-4 inset-x-0 flex items-center justify-center gap-2 z-20">
+          {activeAgents.map((agentId) => {
             const agent = getAgentById(agentId);
             if (!agent) return null;
-            const pos = agentPositions[agentId] || [0, 1, 0];
             return (
-              <AgentAvatar3D 
+              <div
                 key={agentId}
-                id={agentId}
-                name={agent.name}
-                specialty={agent.specialty}
-                state={agentStates[agentId] || 'idle'}
-                position={pos}
-                color={agent.badgeColor || '#3b82f6'}
-              />
+                className="px-3 py-1 rounded-full bg-black/70 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center gap-1.5 shadow-lg backdrop-blur-sm"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>{agent.name}</span>
+              </div>
             );
           })}
-
-          {/* Connect agents to selected region if consulting or observing */}
-          {activeAgents.map(agentId => {
-            const state = agentStates[agentId];
-            if (state === 'observing' || state === 'reasoning' || state === 'consulting') {
-               const pos = agentPositions[agentId];
-               // Target depends on region (abstracted to center body for now)
-               const target: [number, number, number] = [0, selectedRegion === 'head' ? 1.8 : selectedRegion === 'chest' ? 1.1 : 0.5, 0];
-               return <SignalBeam key={`beam-${agentId}`} start={pos} end={target} active={state === 'reasoning' || state === 'consulting'} />;
-            }
-            return null;
-          })}
-
-          {/* Evidence Nodes */}
-          {evidence.map((ev, index) => {
-            // Distribute evidence nodes
-            const angle = (Math.PI * 2) * (index / Math.max(1, evidence.length));
-            const pos: [number, number, number] = [Math.sin(angle) * 1.2, 0.5 + (index * 0.2), Math.cos(angle) * 1.2 - 0.5];
-            
-            return (
-              <React.Fragment key={ev.id}>
-                <EvidenceNode3D evidence={ev} position={pos} />
-                {ev.relatedRegions.length > 0 && (
-                   <SignalBeam start={pos} end={[0, 1.1, 0]} color="#94a3b8" />
-                )}
-              </React.Fragment>
-            );
-          })}
-          
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-          <directionalLight position={[-5, 3, -5]} intensity={0.5} />
-          
-          <ContactShadows position={[0, -1, 0]} opacity={0.4} scale={10} blur={2} far={4} />
-        </Suspense>
-
-        <OrbitControls 
-          enablePan={false}
-          minPolarAngle={Math.PI / 6}
-          maxPolarAngle={Math.PI / 1.8}
-          minDistance={1.5}
-          maxDistance={5}
-        />
-      </Canvas>
+        </div>
+      </div>
     </div>
   );
 };

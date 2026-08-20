@@ -121,6 +121,15 @@ const REGION_DATA: Record<string, RegionDetail> = {
   },
 };
 
+const ORGAN_IMAGES: Record<string, string> = {
+  heart: "https://images.unsplash.com/photo-1559757175-5700dde675bc?q=80&w=1980&auto=format&fit=crop",
+  brain: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=2070&auto=format&fit=crop",
+  lungs: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?q=80&w=2070&auto=format&fit=crop",
+  liver: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070&auto=format&fit=crop",
+  "kidney-left": "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=2070&auto=format&fit=crop",
+  "kidney-right": "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=2070&auto=format&fit=crop",
+};
+
 export const InteractiveAnatomySection: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<string>("heart");
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
@@ -130,13 +139,13 @@ export const InteractiveAnatomySection: React.FC = () => {
 
   const fallback2D = (
     <div className="w-full h-full flex items-center justify-center relative p-6 bg-[#07090e] overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(#06b6d4_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
 
       {/* 2D Holographic Anatomy Schematic Silhouette */}
       <div className="relative w-[280px] h-[380px] flex items-center justify-center">
         <svg
           viewBox="0 0 200 400"
-          className="w-full h-full stroke-cyan-500/40 fill-cyan-500/5 drop-shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+          className="w-full h-full stroke-emerald-500/40 fill-emerald-500/5 drop-shadow-[0_0_20px_rgba(16,185,129,0.15)]"
         >
           <circle cx="100" cy="50" r="28" strokeWidth="1.5" />
           <path d="M92 78 L92 95 M108 78 L108 95" strokeWidth="1.5" />
@@ -150,31 +159,27 @@ export const InteractiveAnatomySection: React.FC = () => {
           <path d="M125 240 L130 340 L135 390" strokeWidth="1.5" strokeDasharray="3 3" />
         </svg>
 
-        {/* 2D Interactive Target Pins */}
-        {Object.entries(REGION_DATA)
-          .filter(([key]) => key !== "kidney-right")
-          .map(([key, organ]) => {
-            const isSelected = selectedRegion === key || (key === "kidney-left" && selectedRegion === "kidney-right");
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSelectedRegion(key)}
-                style={{ top: organ.pos2D.top, left: organ.pos2D.left }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 group z-20 cursor-pointer"
+        {Object.values(REGION_DATA).map((item) => {
+          const isSelected = selectedRegion === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setSelectedRegion(item.id)}
+              style={{ top: item.pos2D.top, left: item.pos2D.left }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
+            >
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                  isSelected
+                    ? "bg-emerald-400 text-slate-950 scale-125 shadow-lg shadow-emerald-400/50"
+                    : "bg-black/80 border border-emerald-500/50 text-emerald-400 hover:scale-110"
+                }`}
               >
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                    isSelected
-                      ? "bg-cyan-400 text-slate-950 scale-125 shadow-[0_0_20px_#06b6d4]"
-                      : "bg-black/80 border border-cyan-500/60 text-cyan-400 hover:scale-110"
-                  }`}
-                >
-                  <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
-                </div>
-              </button>
-            );
-          })}
+                <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -203,7 +208,7 @@ export const InteractiveAnatomySection: React.FC = () => {
           </p>
         </div>
 
-        {/* Interactive Layout: 3D Canvas Left, Intelligence Card Right */}
+        {/* Interactive Layout: 3D Image Viewer Left, Intelligence Card Right */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Anatomical Stage with Progressive Enhancement Switch */}
           <div className="lg:col-span-7 h-[460px] md:h-[540px] bg-[#090c10] rounded-3xl border border-white/10 relative overflow-hidden shadow-2xl flex flex-col">
@@ -225,7 +230,7 @@ export const InteractiveAnatomySection: React.FC = () => {
                       onClick={() => setSelectedRegion(regKey)}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                         isSelected
-                          ? "bg-cyan-500 text-slate-950 font-semibold shadow-md shadow-cyan-500/20"
+                          ? "bg-emerald-500 text-slate-950 font-semibold shadow-md shadow-emerald-500/20"
                           : "bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white"
                       }`}
                     >
@@ -242,48 +247,61 @@ export const InteractiveAnatomySection: React.FC = () => {
                   onClick={() => setStageMode("3d")}
                   className={`px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1 ${
                     stageMode === "3d"
-                      ? "bg-cyan-500/20 text-cyan-300 font-bold"
+                      ? "bg-emerald-500/20 text-emerald-300 font-bold"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                   title="3D Spatial Perspective"
                 >
                   <Box className="w-3 h-3" />
-                  <span>3D</span>
+                  <span>3D IMAGE</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setStageMode("2d")}
                   className={`px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1 ${
                     stageMode === "2d"
-                      ? "bg-cyan-500/20 text-cyan-300 font-bold"
+                      ? "bg-emerald-500/20 text-emerald-300 font-bold"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                   title="2D Schematic Progressive Fallback"
                 >
                   <Layers className="w-3 h-3" />
-                  <span>2D</span>
+                  <span>SCHEMATIC</span>
                 </button>
               </div>
             </div>
 
-            {/* Stage Canvas Body */}
-            <div className="w-full flex-1 relative">
+            {/* Stage Body */}
+            <div className="w-full flex-1 relative flex items-center justify-center p-4 overflow-hidden">
               {stageMode === "3d" ? (
-                <ClinicalScene
-                  cameraPosition={[0, 1.0, 3.8]}
-                  fov={45}
-                  enableOrbit={true}
-                  particleColor="#06b6d4"
-                  className="w-full h-full"
-                  fallback2D={fallback2D}
-                >
-                  <AnatomyModel
-                    selectedRegion={selectedRegion}
-                    onSelectRegion={(id) => id && setSelectedRegion(id)}
-                    hoveredRegion={hoveredRegion}
-                    onHoverRegion={(id) => setHoveredRegion(id)}
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={ORGAN_IMAGES[selectedRegion] || ORGAN_IMAGES["heart"]}
+                    alt={`${currentDetail.name} 3D Human Anatomy render`}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full max-h-[420px] object-contain rounded-2xl filter drop-shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all duration-500"
                   />
-                </ClinicalScene>
+
+                  {/* Anatomical Marker Pin */}
+                  <div
+                    style={{ top: currentDetail.pos2D.top, left: currentDetail.pos2D.left }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shadow-[0_0_20px_#10b981] animate-bounce">
+                      <span className="w-2.5 h-2.5 rounded-full bg-slate-950" />
+                    </div>
+                  </div>
+
+                  {/* Telemetry Tag Overlay */}
+                  <div className="absolute top-4 left-4 bg-black/80 border border-emerald-500/30 backdrop-blur-md rounded-xl p-2.5">
+                    <span className="text-[10px] font-mono text-emerald-400 block uppercase">
+                      ORGAN TARGET
+                    </span>
+                    <span className="text-xs font-semibold text-white">
+                      {currentDetail.name}
+                    </span>
+                  </div>
+                </div>
               ) : (
                 fallback2D
               )}
@@ -291,8 +309,8 @@ export const InteractiveAnatomySection: React.FC = () => {
 
             {/* Helper tooltip indicator at bottom */}
             <div className="absolute bottom-3 inset-x-0 text-center pointer-events-none">
-              <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider bg-black/60 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm">
-                Rotate / Click any anatomical node to inspect
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider bg-black/70 px-3 py-1 rounded-full border border-white/10 backdrop-blur-sm">
+                Select organ tab to switch 3D anatomical views
               </span>
             </div>
           </div>
@@ -310,14 +328,14 @@ export const InteractiveAnatomySection: React.FC = () => {
               >
                 <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
                   <div>
-                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-wider">
+                    <span className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
                       {currentDetail.system}
                     </span>
                     <h3 className="text-xl font-semibold text-white mt-0.5">
                       {currentDetail.name}
                     </h3>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                     {currentDetail.id === "heart" ? (
                       <HeartPulse className="w-5 h-5 animate-pulse" />
                     ) : currentDetail.id === "brain" ? (

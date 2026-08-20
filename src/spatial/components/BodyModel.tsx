@@ -25,11 +25,11 @@ export const BodyModel: React.FC<BodyModelProps> = ({ selectedRegion }) => {
   };
 
   const getMaterialColor = (regionId: string) => {
-    return selectedRegion === regionId ? "#3b82f6" : "#e2e8f0";
+    return selectedRegion === regionId ? "#0284c7" : "#cbd5e1";
   };
 
   const getOpacity = (regionId: string) => {
-    return selectedRegion === regionId ? 0.9 : 0.6;
+    return selectedRegion === regionId ? 0.9 : 0.45;
   };
 
   return (
@@ -39,15 +39,16 @@ export const BodyModel: React.FC<BodyModelProps> = ({ selectedRegion }) => {
         position={[0, 1.8, 0]} 
         onPointerDown={(e) => handlePointerDown(e, 'head')}
       >
-        <sphereGeometry args={[0.25, 32, 32]} />
+        <sphereGeometry args={[0.24, 32, 32]} />
         <meshPhysicalMaterial 
           color={getMaterialColor('head')} 
           transparent opacity={getOpacity('head')} 
-          roughness={0.2} metalness={0.1} 
+          roughness={0.4} metalness={0.1} 
+          clearcoat={0.2}
         />
         {selectedRegion === 'head' && (
           <Html position={[0.4, 0, 0]} center className="pointer-events-none">
-            <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-md border border-slate-700 whitespace-nowrap">
+            <div className="bg-slate-900/90 text-white text-xs px-2.5 py-1 rounded border border-white/10 whitespace-nowrap shadow-xl">
               Neurological System
             </div>
           </Html>
@@ -56,18 +57,19 @@ export const BodyModel: React.FC<BodyModelProps> = ({ selectedRegion }) => {
 
       {/* Torso / Chest */}
       <mesh 
-        position={[0, 1.1, 0]}
+        position={[0, 1.1, 0]} 
         onPointerDown={(e) => handlePointerDown(e, 'chest')}
       >
-        <cylinderGeometry args={[0.35, 0.3, 0.8, 32]} />
+        <cylinderGeometry args={[0.33, 0.28, 0.78, 32]} />
         <meshPhysicalMaterial 
           color={getMaterialColor('chest')} 
           transparent opacity={getOpacity('chest')} 
-          roughness={0.2} metalness={0.1} 
+          roughness={0.4} metalness={0.1} 
+          clearcoat={0.2}
         />
         {selectedRegion === 'chest' && (
           <Html position={[0.5, 0, 0]} center className="pointer-events-none">
-            <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-md border border-slate-700 whitespace-nowrap">
+            <div className="bg-slate-900/90 text-white text-xs px-2.5 py-1 rounded border border-white/10 whitespace-nowrap shadow-xl">
               Cardiovascular / Respiratory
             </div>
           </Html>
@@ -76,23 +78,25 @@ export const BodyModel: React.FC<BodyModelProps> = ({ selectedRegion }) => {
 
       {/* Abdomen */}
       <mesh 
-        position={[0, 0.5, 0]}
+        position={[0, 0.5, 0]} 
         onPointerDown={(e) => handlePointerDown(e, 'abdomen')}
       >
-        <cylinderGeometry args={[0.3, 0.35, 0.4, 32]} />
+        <cylinderGeometry args={[0.28, 0.32, 0.38, 32]} />
         <meshPhysicalMaterial 
           color={getMaterialColor('abdomen')} 
           transparent opacity={getOpacity('abdomen')} 
-          roughness={0.2} metalness={0.1} 
+          roughness={0.4} metalness={0.1} 
+          clearcoat={0.2}
         />
         {selectedRegion === 'abdomen' && (
           <Html position={[0.5, 0, 0]} center className="pointer-events-none">
-            <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-md border border-slate-700 whitespace-nowrap">
-              Gastrointestinal
+            <div className="bg-slate-900/90 text-white text-xs px-2.5 py-1 rounded border border-white/10 whitespace-nowrap shadow-xl">
+              Gastrointestinal System
             </div>
           </Html>
         )}
       </mesh>
+
       
       {/* Arms and Legs (Abstract representations) */}
       {/* Left Arm */}

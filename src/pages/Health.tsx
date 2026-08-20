@@ -88,7 +88,7 @@ export const Health: React.FC<HealthProps> = ({ onApplyVitals }) => {
 
       {/* Scroll Reveal Image */}
       <ScrollRevealImage
-        src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?q=80&w=2070&auto=format&fit=crop"
+        src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=2070&auto=format&fit=crop"
         alt="Multidimensional Anatomy Systems"
         caption="Integrated multisystem physiological mapping connected directly to specialized clinical reasoning agents."
         credit="Yurrheeler Health Intelligence"

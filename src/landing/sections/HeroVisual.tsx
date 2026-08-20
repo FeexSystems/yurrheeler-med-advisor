@@ -402,76 +402,92 @@ export const HeroVisual: React.FC = () => {
           </div>
         </div>
 
-        {/* Render 3D Scene or Progressive 2D Schematic */}
-        {renderMode === "3d" ? (
-          <ClinicalScene
-            cameraPosition={[0, 1.1, 4.1]}
-            fov={42}
-            enableOrbit={true}
-            particleColor={particleColor}
-            className="w-full h-full"
-            fallback2D={fallback2D}
-          >
-            {/* Central Classical Anatomical Model */}
-            <AnatomyModel
-              selectedRegion={selectedRegion}
-              onSelectRegion={(id) => setSelectedRegion(id || "heart")}
-              hoveredRegion={hoveredRegion}
-              onHoverRegion={setHoveredRegion}
-              themeMode={themeMode}
+        {/* 3D Human Anatomy Hologram & Schematic View */}
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+          {/* High-Resolution 3D Human Anatomy Holographic Render Image */}
+          <div className="relative w-full max-w-[480px] h-[92%] flex items-center justify-center">
+            <img
+              src="/hero-anatomy-uploaded.svg"
+              alt="3D Human Anatomy Holographic Render"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-contain rounded-2xl transition-all duration-700 select-none filter drop-shadow-[0_0_35px_rgba(56,189,248,0.3)]"
             />
 
-            {/* Specialist Medical Agents Orbiting */}
-            {heroAgents.map((agent, idx) => (
-              <AgentNode
-                key={agent.id}
-                id={agent.id}
-                name={agent.name}
-                specialty={agent.specialty}
-                state={idx === 0 ? "reasoning" : idx === 1 ? "observing" : "processing"}
-                position={agentPositions[idx] || [0, 1, 0]}
-                color={
-                  themeMode === "classic-vitruvian"
-                    ? idx === 0
-                      ? "#dc2626"
-                      : idx === 1
-                      ? "#0d9488"
-                      : "#d4af37"
-                    : agent.badgeColor === "red"
-                    ? "#ef4444"
-                    : agent.badgeColor === "cyan"
-                    ? "#06b6d4"
-                    : agent.badgeColor === "amber"
-                    ? "#f59e0b"
-                    : "#10b981"
-                }
-              />
-            ))}
+            {/* Subtle Vitruvian Classical Circle Overlay */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="w-[340px] h-[340px] rounded-full border border-[#d4af37]/20 flex items-center justify-center animate-[spin_60s_linear_infinite]">
+                <div className="w-[280px] h-[280px] rounded-full border border-dashed border-[#d4af37]/25" />
+              </div>
+            </div>
 
-            {/* Classical Guideline & Diagnostic Evidence Nodes */}
-            <EvidenceNode3D
-              id="ev-1"
-              label="NICE Guideline CG95"
-              source="Primary Literature"
-              confidence={0.96}
-              position={[-0.85, 1.85, 0.4]}
-              color={themeMode === "classic-vitruvian" ? "#d4af37" : "#38bdf8"}
-            />
-            <EvidenceNode3D
-              id="ev-2"
-              label="Serum Troponin T Trend"
-              source="Diagnostic Assay"
-              confidence={0.98}
-              position={[0.95, 1.05, 0.5]}
-              color={themeMode === "classic-vitruvian" ? "#f59e0b" : "#10b981"}
-            />
+            {/* Interactive 3D Anatomy Organ Hotspots */}
+            {CLASSIC_ORGANS.map((organ) => {
+              const isSelected = selectedRegion === organ.id;
+              const isHovered = hoveredRegion === organ.id;
+              return (
+                <button
+                  key={organ.id}
+                  type="button"
+                  onClick={() => setSelectedRegion(organ.id)}
+                  onMouseEnter={() => setHoveredRegion(organ.id)}
+                  onMouseLeave={() => setHoveredRegion(null)}
+                  style={{ top: organ.position2D.top, left: organ.position2D.left }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2 group z-20 cursor-pointer focus:outline-none"
+                >
+                  <div
+                    className={`relative flex items-center justify-center transition-all duration-300 ${
+                      isSelected
+                        ? "w-8 h-8 rounded-full bg-[#d4af37] text-slate-950 shadow-[0_0_25px_#d4af37] scale-110"
+                        : isHovered
+                        ? "w-7 h-7 rounded-full bg-[#d4af37]/30 border-2 border-[#d4af37] text-[#d4af37] scale-105"
+                        : "w-6 h-6 rounded-full bg-black/80 border border-[#d4af37]/70 text-[#d4af37]"
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        isSelected ? "bg-slate-950" : "bg-[#d4af37] animate-pulse"
+                      }`}
+                    />
+                    {isSelected && (
+                      <span className="absolute inset-0 rounded-full border border-white/60 animate-ping opacity-60 pointer-events-none" />
+                    )}
+                  </div>
 
-            {/* Connection Lines */}
-            <ConnectionLines connections={connections} />
-          </ClinicalScene>
-        ) : (
-          fallback2D
-        )}
+                  {/* Hotspot Floating Tag */}
+                  <div
+                    className={`absolute left-9 top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] font-mono px-2.5 py-1 rounded backdrop-blur-md border transition-all pointer-events-none ${
+                      isSelected
+                        ? "bg-[#181308]/95 border-[#d4af37] text-[#fef08a] shadow-lg opacity-100 translate-x-0"
+                        : isHovered
+                        ? "bg-black/90 border-[#d4af37]/60 text-white opacity-100 translate-x-0"
+                        : "opacity-0 -translate-x-2 hidden md:block group-hover:opacity-100 group-hover:translate-x-0 bg-black/80 border-white/10 text-slate-300"
+                    }`}
+                  >
+                    <span className="font-serif font-semibold block">{organ.latin}</span>
+                    <span className="text-[9px] text-[#d4af37] block">{organ.vital}</span>
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* Orbiting Specialist Intelligence Node Badges */}
+            <div className="absolute top-[12%] -left-8 md:left-2 flex items-center gap-2 p-2 rounded-xl bg-black/80 border border-emerald-500/40 backdrop-blur-md shadow-xl text-left pointer-events-none">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <div>
+                <span className="text-[10px] font-mono font-bold text-emerald-400 block">CARDIA ACTIVE</span>
+                <span className="text-[9px] text-slate-300">Hemodynamic Pulse</span>
+              </div>
+            </div>
+
+            <div className="absolute bottom-[20%] -right-6 md:right-2 flex items-center gap-2 p-2 rounded-xl bg-black/80 border border-[#d4af37]/40 backdrop-blur-md shadow-xl text-left pointer-events-none">
+              <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse" />
+              <div>
+                <span className="text-[10px] font-mono font-bold text-[#fef08a] block">NEPHRO ACTIVE</span>
+                <span className="text-[9px] text-slate-300">Filtration Telemetry</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* 3. CLASSICAL CALIPERS & DEGREE MARKINGS HUD */}
         <div className="absolute top-4 left-4 pointer-events-none text-[10px] font-mono text-[#d4af37]/80 flex flex-col gap-0.5">

@@ -3,23 +3,24 @@ import React from "react";
 export const SpatialLighting: React.FC = () => {
   return (
     <>
-      <ambientLight intensity={0.4} color="#f8fafc" />
-      {/* Key light */}
+      <ambientLight intensity={0.65} color="#faf8f5" />
+      {/* Primary Key Light - Crisp Gallery Warm White */}
       <directionalLight
-        position={[6, 8, 5]}
-        intensity={1.2}
-        color="#ffffff"
+        position={[4, 6, 4]}
+        intensity={0.9}
+        color="#fffbf5"
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      {/* Cool rim light */}
+      {/* Subtle Classical Rim Light */}
       <directionalLight
-        position={[-6, 4, -5]}
-        intensity={0.8}
-        color="#10b981"
+        position={[-4, 3, -4]}
+        intensity={0.4}
+        color="#e2e8f0"
       />
-      {/* Soft fill light */}
-      <pointLight position={[0, -3, 3]} intensity={0.5} color="#06b6d4" />
+      {/* Gentle Underside Fill */}
+      <pointLight position={[0, -2, 2.5]} intensity={0.25} color="#cbd5e1" />
     </>
   );
 };
+

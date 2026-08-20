@@ -151,7 +151,7 @@ export default function LandingPage() {
           </p>
         </div>
         <ScrollRevealImage
-          src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1505576399279-565b52d4ac71?q=80&w=2070&auto=format&fit=crop"
           alt="Clinician synthesizing comprehensive biometric telemetry and diagnostic evidence"
           height="72vh"
           fromWidth="52vw"
@@ -437,7 +437,7 @@ function ClinicalSpaceSection() {
           </div>
 
           <ScrollRevealImage
-            src="https://images.unsplash.com/photo-1551076805-e18690c5e53b?q=80&w=2070&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=2070&auto=format&fit=crop"
             alt="Yurrheeler Clinical Workspace with 3D anatomical viewer and agent chat"
             height="68vh"
             fromWidth="60vw"

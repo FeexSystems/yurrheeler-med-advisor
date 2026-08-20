@@ -132,7 +132,7 @@ export const clinicalImages: HealthImage[] = [
 export const researchImages: HealthImage[] = [
   {
     id: "research-genomics",
-    src: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?q=80&w=2070&auto=format&fit=crop",
+    src: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?q=80&w=2070&auto=format&fit=crop",
     alt: "Molecular genetics workstation exploring biomarker expression in clinical datasets",
     category: "research",
     title: "Genomic & Molecular Biomarkers",

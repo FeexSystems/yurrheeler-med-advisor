@@ -34,9 +34,17 @@ export function AiChatInterface() {
 
   const safeInput = typeof input === "string" ? input : "";
 
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (typeof handleInputChange === "function") {
+      handleInputChange(e);
+    } else if (typeof setInput === "function") {
+      setInput(e.target.value);
+    }
+  };
+
   const { isListening, hasSupport, toggleListening } = useSpeechRecognition({
     onResult: (transcript) => {
-      if (setInput) {
+      if (typeof setInput === "function") {
         setInput((prev) => (prev ? prev + " " : "") + transcript);
       }
     },
@@ -177,7 +185,7 @@ export function AiChatInterface() {
             <textarea
               ref={textareaRef}
               value={safeInput}
-              onChange={handleInputChange}
+              onChange={handleTextareaChange}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();

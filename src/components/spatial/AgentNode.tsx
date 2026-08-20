@@ -100,37 +100,38 @@ export const AgentNode: React.FC<AgentNodeProps> = ({
     >
       {/* Central Core Octahedron */}
       <mesh ref={coreRef}>
-        <octahedronGeometry args={[0.22, 0]} />
+        <octahedronGeometry args={[0.18, 0]} />
         <meshStandardMaterial
           color={activeColor}
           emissive={activeColor}
-          emissiveIntensity={0.8}
-          roughness={0.2}
-          metalness={0.8}
+          emissiveIntensity={state === "reasoning" || state === "processing" ? 0.45 : 0.15}
+          roughness={0.3}
+          metalness={0.4}
           wireframe={state === "processing"}
         />
       </mesh>
 
       {/* Orbiting Torus Ring */}
       <mesh ref={ringRef}>
-        <torusGeometry args={[0.36, 0.015, 16, 32]} />
+        <torusGeometry args={[0.3, 0.008, 16, 48]} />
         <meshBasicMaterial
           color={activeColor}
           transparent
-          opacity={0.7}
-          wireframe
+          opacity={0.4}
         />
       </mesh>
 
-      {/* Outer Halo Ring */}
+      {/* Outer Subtle Minimal Ring */}
       <mesh ref={outerRingRef}>
-        <torusGeometry args={[0.48, 0.008, 12, 32]} />
+        <ringGeometry args={[0.38, 0.385, 48]} />
         <meshBasicMaterial
           color={activeColor}
           transparent
-          opacity={0.3}
+          opacity={0.18}
+          side={THREE.DoubleSide}
         />
       </mesh>
+
 
       {/* HTML Annotation overlay */}
       {showDetails && (

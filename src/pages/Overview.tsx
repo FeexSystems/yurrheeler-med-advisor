@@ -195,7 +195,7 @@ export const Overview: React.FC<OverviewProps> = ({
 
       {/* 5. CINEMATIC CLINICAL STORY STRIP */}
       <ScrollRevealImage
-        src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop"
+        src="https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=2070&auto=format&fit=crop"
         alt="Clinical Intelligence Synchronized"
         aspectRatio="wide"
         revealType="width"
