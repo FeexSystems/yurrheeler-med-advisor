@@ -2,7 +2,9 @@
   "name": "Yurrheeler Med Advisor",
   "description": "Evidence-based AI medical triage platform with 17 clinical specialist doctor agents, interactive anatomical mapping, and biomarker risk analytics.",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "camera",
+    "geolocation"
   ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

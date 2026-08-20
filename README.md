@@ -1,73 +1,106 @@
-# Welcome to your Lovable project
+# Yurrheeler Med Advisor
 
-## Project info
+An evidence-based, clinical intelligence & AI medical triage platform powered by **17 specialized AI medical agents**, multimodal diagnostic vision, real-time speech acoustics, pharmacotherapy safety screening, and geospatial emergency care routing.
 
-**URL**: https://lovable.dev/projects/fcb099a5-7da4-4570-a56f-9d37ec4c2268
+---
 
-## How can I edit this code?
+## 🌟 Key Features & Clinical AI Engines
 
-There are several ways of editing your application.
+### 1. Multimodal Diagnostic Vision & Lab OCR
+- **Diagnostic Sample Scanning**: Upload or inspect dermatological lesions (ABCDE criteria), chest radiographs (CXR opacity/consolidation), 12-lead ECG rhythm strips (STEMI/arrhythmia), and comprehensive metabolic blood panels.
+- **ROI & Biomarker Extraction**: Visual bounding boxes, automated reference-range flag classification (High/Normal/Low), and confidence-scored triage guidance.
 
-**Use Lovable**
+### 2. Multi-Specialist Clinical Consensus Panel (Tumor Board Engine)
+- **Concurrent Specialist Deliberation**: Convene roundtables across all 17 clinical AI agents (Cardiology, Pulmonology, Neurology, Oncology, Nephrology, Gastroenterology, etc.).
+- **Diagnostic Concordance Matrix**: Cross-examines competing differentials, highlights clinical controversies, checks clinical guidelines (AHA, ACC, NICE, GOLD), and establishes prioritized Tier 1–3 action plans.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/fcb099a5-7da4-4570-a56f-9d37ec4c2268) and start prompting.
+### 3. Real-Time Voice Consultation & Acoustic Cough Triage
+- **Hands-Free Speech Dialogue**: Web Speech recognition transcript capture with real-time audio spectrum canvas visualizer and synthesized voice playback.
+- **Respiratory Acoustic Mechanics**: Acoustic analysis differentiating dry/hacking, productive/wet, musical wheezing, and barking/stridor coughs with pulmonary distress markers.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 4. Drug Interaction & Contraindication Safety Matrix
+- **Pharmacotherapy Safety Screening**: Cross-examines prescription drugs, OTC medications, herbal supplements, patient comorbidities, and documented allergies.
+- **High-Risk Cascade Detection**: Flags CYP450 enzyme competition, QT prolongation, cardiorenal "triple whammy" hazards, serotonin syndrome, and anticoagulant bleeding risks.
 
-**Use your preferred IDE**
+### 5. Geospatial Emergency Room & Urgent Care Locator
+- **Triage Urgency Alignment**: Categorizes patient acuity into Critical Emergency (Level 1 Trauma/ED STAT), Urgent (Within 2-4h), Semi-Urgent (24h Walk-In), and Routine/Rx.
+- **Geospatial Proximity**: GPS and ZIP-code search for accredited trauma centers, emergency departments, urgent care clinics, and 24/7 pharmacies with direct 911 dialing and pre-departure checklists.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 6. 17 Specialized Medical AI Agents
+- Dr. Aris Thorne (Pulmonology & Critical Care)
+- Dr. Elena Vance (Cardiology & Electrophysiology)
+- Dr. Noah Sterling (Neurology & Neurovascular)
+- Dr. Maya Lin (Gastroenterology & Hepatology)
+- Dr. Julian Mercer (Emergency & Trauma Medicine)
+- Dr. Sophia Chen (Endocrinology & Metabolism)
+- Dr. Marcus Brody (Orthopedic Surgery & Sports Med)
+- Dr. Clara Oswald (Pediatrics & Adolescent Health)
+- Dr. Samuel Bennett (Dermatology & Cutaneous Oncology)
+- Dr. Sarah Mitchell (Internal Medicine & Rheumatology)
+- Dr. Liam Gallagher (Infectious Disease & Global Health)
+- Dr. Priya Patel (Immunology & Allergy)
+- Dr. Robert Hayes (Nephrology & Renal Medicine)
+- Dr. Vivienne Moreau (Oncology & Hematology)
+- Dr. Isaac Clarke (Psychiatry & Behavioral Health)
+- Dr. Hannah Abbott (Geriatrics & Palliative Care)
+- Dr. David Kim (Radiology & Nuclear Medicine)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 7. Interactive 3D Spatial Anatomical Mapping
+- Visual interactive 3D human body atlas with anatomical region selection, symptom localization, organ system cross-referencing, and differential recommendations.
 
-Follow these steps:
+### 8. NEWS2 & Vital Biomarker Analytics
+- National Early Warning Score 2 (NEWS2) calculation engine evaluating respiratory rate, SpO2, systolic BP, pulse rate, consciousness level, and temperature.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Lucide Icons, Framer Motion (`motion/react`), Sonner Toasts
+- **UI Components**: Radix UI headless primitives with custom Tailwind design system
+- **Backend**: Node.js & Express API routes (`server.ts`)
+- **AI Models & Engines**: Google Gemini API (`@google/genai`) for multimodal vision, clinical synthesis, and conversational intelligence
+- **State & Persistence**: Firebase Firestore database & Client-side Clinical Store
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ or 20+
+- npm or yarn
+
+### Installation
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
+cd yurrheeler-med-advisor
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install dependencies
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Environment Variables
+Create a `.env` file with your Gemini API key and Firebase configurations:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Development Server
+```bash
+# Start dev server on port 3000
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Production Build
+```bash
+# Build client and bundle server
+npm run build
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Start production server
+npm run start
+```
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/fcb099a5-7da4-4570-a56f-9d37ec4c2268) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🔒 Clinical Disclaimer
+*Yurrheeler Med Advisor is an AI-assisted clinical decision support and educational tool. It does not replace professional clinical judgment, emergency medical services, or in-person medical evaluation. In case of a medical emergency, immediately contact local emergency services (911 in the US).*

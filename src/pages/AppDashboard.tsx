@@ -24,6 +24,11 @@ import { ClinicalProtocols } from "@/components/ClinicalProtocols";
 import { ConsultationInterface } from "@/components/ConsultationInterface";
 import { UserProfileDashboard } from "@/components/profile/UserProfileDashboard";
 import { SettingsDashboard } from "@/components/settings/SettingsDashboard";
+import { MultimodalAnalyzer } from "@/components/intelligence/MultimodalAnalyzer";
+import { TumorBoardConsensus } from "@/components/intelligence/TumorBoardConsensus";
+import { VoiceAcousticTriage } from "@/components/intelligence/VoiceAcousticTriage";
+import { DrugInteractionSafetyMatrix } from "@/components/intelligence/DrugInteractionSafetyMatrix";
+import { EmergencyCareLocator } from "@/components/intelligence/EmergencyCareLocator";
 import { Agent, agents } from "@/lib/agents";
 import { useClinicalStore } from "@/clinical/store";
 import { Link } from "react-router-dom";
@@ -167,6 +172,88 @@ const AppDashboard: React.FC = () => {
                 transition={{ duration: 0.25 }}
               >
                 <AiChatInterface />
+              </motion.div>
+            )}
+
+            {/* VIEW 1C: MULTIMODAL DIAGNOSTIC VISION */}
+            {activeTab === "multimodal" && (
+              <motion.div
+                key="multimodal-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <MultimodalAnalyzer
+                  onConsultSpecialist={(specialty, notes) => {
+                    const agent = agents.find((a) => a.specialty.toLowerCase().includes(specialty.toLowerCase())) || agents[0];
+                    handleConsultAgent(agent, notes);
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {/* VIEW 1D: MULTI-SPECIALIST TUMOR BOARD CONSENSUS */}
+            {activeTab === "consensus" && (
+              <motion.div
+                key="consensus-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <TumorBoardConsensus
+                  onConsultAgent={(agent, notes) => handleConsultAgent(agent, notes)}
+                />
+              </motion.div>
+            )}
+
+            {/* VIEW 1E: VOICE & ACOUSTIC COUGH TRIAGE */}
+            {activeTab === "voice" && (
+              <motion.div
+                key="voice-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <VoiceAcousticTriage
+                  onConsultSpecialist={(specialty, notes) => {
+                    const agent = agents.find((a) => a.specialty.toLowerCase().includes(specialty.toLowerCase())) || agents[1];
+                    handleConsultAgent(agent, notes);
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {/* VIEW 1F: DRUG INTERACTION & CONTRAINDICATION MATRIX */}
+            {activeTab === "drugs" && (
+              <motion.div
+                key="drugs-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <DrugInteractionSafetyMatrix
+                  onConsultSpecialist={(specialty, notes) => {
+                    const agent = agents.find((a) => a.specialty.toLowerCase().includes(specialty.toLowerCase())) || agents[0];
+                    handleConsultAgent(agent, notes);
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {/* VIEW 1G: GEOSPATIAL ER & URGENT CARE LOCATOR */}
+            {activeTab === "emergency" && (
+              <motion.div
+                key="emergency-tab"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <EmergencyCareLocator />
               </motion.div>
             )}
 

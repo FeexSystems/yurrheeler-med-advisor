@@ -87,6 +87,145 @@ export const Overview: React.FC<OverviewProps> = ({
       {/* 2. CLINICAL INTELLIGENCE STATUS */}
       <IntelligenceStatus />
 
+      {/* 2B. NEW CLINICAL AI INTELLIGENCE SUITE (5 EXPANDED MODULES) */}
+      <div className="bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-md dark:shadow-xl transition-colors space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-white/5 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Next-Gen Clinical AI Diagnostic Suite
+              </h3>
+              <p className="text-xs text-slate-500">
+                5 specialized multi-agent and multimodal clinical workflows
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 self-start sm:self-auto">
+            ALL 5 ENGINES ACTIVE
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+          {/* Card 1: Multimodal Vision */}
+          <div
+            onClick={() => onNavigateTab && onNavigateTab("multimodal")}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 transition-all cursor-pointer group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Feature 1</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Multimodal Vision & Lab OCR
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Scan dermatological lesions, radiographs, 12-lead ECGs, and blood panels with instant clinical triage.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+              <span>Open Scanner</span>
+              <span>→</span>
+            </div>
+          </div>
+
+          {/* Card 2: Tumor Board Consensus */}
+          <div
+            onClick={() => onNavigateTab && onNavigateTab("consensus")}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Feature 2</span>
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                Multi-Specialist Tumor Board
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Convene 17 specialist agents to resolve diagnostic controversy, calculate concordance, and synthesize action plans.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center justify-between">
+              <span>Convene Panel</span>
+              <span>→</span>
+            </div>
+          </div>
+
+          {/* Card 3: Voice & Acoustic Triage */}
+          <div
+            onClick={() => onNavigateTab && onNavigateTab("voice")}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-teal-500 hover:bg-teal-50/40 dark:hover:bg-teal-950/20 transition-all cursor-pointer group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">Feature 3</span>
+                <span className="w-2 h-2 rounded-full bg-teal-500" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                Voice & Acoustic Cough Triage
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Hands-free speech consultation with acoustic sound evaluation for dry, productive, wheezing, or stridor coughs.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px] font-bold text-teal-600 dark:text-teal-400 flex items-center justify-between">
+              <span>Start Voice Triage</span>
+              <span>→</span>
+            </div>
+          </div>
+
+          {/* Card 4: Drug Safety Matrix */}
+          <div
+            onClick={() => onNavigateTab && onNavigateTab("drugs")}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-rose-500 hover:bg-rose-50/40 dark:hover:bg-rose-950/20 transition-all cursor-pointer group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Feature 4</span>
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                Drug Safety & Contraindications
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Pharmacotherapy matrix screening prescriptions, herbal supplements, allergies, and organ clearance limits.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px] font-bold text-rose-600 dark:text-rose-400 flex items-center justify-between">
+              <span>Run Drug Screen</span>
+              <span>→</span>
+            </div>
+          </div>
+
+          {/* Card 5: Emergency Care Locator */}
+          <div
+            onClick={() => onNavigateTab && onNavigateTab("emergency")}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-red-500 hover:bg-red-50/40 dark:hover:bg-red-950/20 transition-all cursor-pointer group flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">Feature 5</span>
+                <span className="w-2 h-2 rounded-full bg-red-500" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                Geospatial ER & Urgent Care
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Locate open trauma centers, emergency rooms, urgent care clinics, and pharmacies matched to your triage severity.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800 text-[10px] font-bold text-red-600 dark:text-red-400 flex items-center justify-between">
+              <span>Find Nearby Care</span>
+              <span>→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 3. CORE DUAL WORKSPACE: PATIENT CONTEXT + LIVE ACTIVITY */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Coherent Patient Context Object */}

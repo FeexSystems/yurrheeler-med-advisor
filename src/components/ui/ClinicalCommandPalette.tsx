@@ -67,6 +67,11 @@ export const ClinicalCommandPalette: React.FC<ClinicalCommandPaletteProps> = ({
   const quickNav = [
     { id: "overview", label: "Overview & Intelligence Status", icon: Sparkles },
     { id: "chat", label: "Clinical Intelligence Conversation", icon: MessageSquare },
+    { id: "multimodal", label: "Multimodal Vision Triage (Images & Lab OCR)", icon: Layers },
+    { id: "consensus", label: "Multidisciplinary Tumor Board (17 Specialists)", icon: Brain },
+    { id: "voice", label: "Voice Consultation & Acoustic Cough Triage", icon: Activity },
+    { id: "drugs", label: "Drug Interaction & Contraindication Matrix", icon: BookOpen },
+    { id: "emergency", label: "Geospatial ER & Urgent Care Locator", icon: Activity },
     { id: "agents", label: "Specialist Constellation (17 Doctors)", icon: Brain },
     { id: "anatomy", label: "3D Spatial Anatomy Explorer", icon: Layers },
     { id: "health", label: "Health Metrics & Biomarkers (NEWS2)", icon: Activity },

@@ -11,6 +11,11 @@ import {
   Settings,
   ShieldCheck,
   Search,
+  Eye,
+  Mic,
+  Pill,
+  MapPin,
+  HeartPulse
 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
@@ -25,6 +30,11 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { id: "overview", label: "Intelligence Overview", shortLabel: "Overview", icon: Sparkles, badge: "Live" },
   { id: "chat", label: "Clinical Conversation", shortLabel: "Conversation", icon: MessageSquare },
+  { id: "multimodal", label: "Multimodal Vision Triage", shortLabel: "Vision", icon: Eye, badge: "Vision" },
+  { id: "consensus", label: "Specialist Consensus Panel", shortLabel: "Tumor Board", icon: Users, badge: "17 AI" },
+  { id: "voice", label: "Voice & Acoustic Triage", shortLabel: "Voice/Cough", icon: Mic, badge: "Acoustics" },
+  { id: "drugs", label: "Drug Safety Matrix", shortLabel: "Drug Matrix", icon: Pill, badge: "Rx Safety" },
+  { id: "emergency", label: "ER & Urgent Locator", shortLabel: "ER Locator", icon: MapPin, badge: "GPS" },
   { id: "aichat", label: "Stream Synthesis", shortLabel: "Stream", icon: Sparkles },
   { id: "agents", label: "Specialist Constellation", shortLabel: "Specialists", icon: Users, badge: "17" },
   { id: "anatomy", label: "Spatial Anatomy", shortLabel: "Anatomy", icon: Layers },
